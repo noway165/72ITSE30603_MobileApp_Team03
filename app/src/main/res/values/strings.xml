@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MoneyManager</string>
+    <string name="title_dashboard">Tổng quan tài chính</string>
+    <string name="title_report">Báo cáo chi tiêu</string>
+    <string name="hint_amount">Nhập số tiền</string>
+    <string name="btn_convert">Chuyển đổi</string>
+</resources>

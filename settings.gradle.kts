@@ -19,12 +19,9 @@ dependencyResolutionManagement {
     repositories {
         google()
         mavenCentral()
-        // MPAndroidChart is only published on JitPack
-        maven("https://jitpack.io") {
-            content { includeGroup("com.github.PhilJay") }
-        }
+        maven { url = uri("https://jitpack.io") }
     }
 }
 
-rootProject.name = "FinanceTracker"
+rootProject.name = "MoneyManager"
 include(":app")

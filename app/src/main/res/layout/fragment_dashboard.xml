@@ -1,267 +1,32 @@
 <?xml version="1.0" encoding="utf-8"?>
-<!-- Dashboard: sync banner (offline changes waiting), teal balance card with this month's income / expense,
-     quick actions, recent transactions (reuses item_transaction), extended FAB "Add". -->
-<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout
+    xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".feature.dashboard.ui.DashboardFragment">
+    android:padding="@dimen/margin_medium">
 
-    <androidx.core.widget.NestedScrollView
-        android:id="@+id/scrollDashboard"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:clipToPadding="false"
-        android:paddingBottom="@dimen/fab_clearance">
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:padding="@dimen/screen_padding">
-
-            <!-- Visible while some local changes are not uploaded yet -->
-            <com.google.android.material.card.MaterialCardView
-                android:id="@+id/cardSyncBanner"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginBottom="@dimen/space_m"
-                android:visibility="gone"
-                app:cardBackgroundColor="@color/warning_container"
-                app:cardElevation="0dp"
-                tools:visibility="visible">
-
-                <TextView
-                    android:id="@+id/tvSyncBanner"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:drawablePadding="@dimen/space_m"
-                    android:gravity="center_vertical"
-                    android:padding="@dimen/space_m"
-                    android:textAppearance="?attr/textAppearanceBodyMedium"
-                    android:textColor="@color/warning"
-                    app:drawableStartCompat="@drawable/ic_sync"
-                    app:drawableTint="@color/warning"
-                    tools:text="3 changes are waiting to sync" />
-            </com.google.android.material.card.MaterialCardView>
-
-            <!-- Balance card -->
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:id="@+id/cardBalance"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:background="@drawable/bg_balance_card"
-                android:elevation="2dp"
-                android:padding="20dp">
-
-                <TextView
-                    android:id="@+id/tvBalanceLabel"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.85"
-                    android:text="@string/dashboard_total_balance"
-                    android:textAppearance="@style/TextAppearance.FinanceTracker.OnBrand"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <TextView
-                    android:id="@+id/tvBalanceMonth"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:alpha="0.85"
-                    android:textAppearance="@style/TextAppearance.FinanceTracker.OnBrand"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent"
-                    tools:text="10/2026" />
-
-                <TextView
-                    android:id="@+id/tvBalance"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_xs"
-                    app:autoSizeMaxTextSize="32sp"
-                    app:autoSizeMinTextSize="18sp"
-                    app:autoSizeTextType="uniform"
-                    android:maxLines="1"
-                    android:textAppearance="@style/TextAppearance.FinanceTracker.Amount"
-                    android:textColor="@color/white"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvBalanceLabel"
-                    tools:text="12.450.000 ₫" />
-
-                <!-- Income box (left half) -->
-                <LinearLayout
-                    android:id="@+id/boxIncome"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="@dimen/space_l"
-                    android:layout_marginEnd="@dimen/space_xs"
-                    android:background="@drawable/bg_on_brand_box"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_m"
-                    app:layout_constraintEnd_toStartOf="@id/boxExpense"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@id/tvBalance">
-
-                    <TextView
-                        android:id="@+id/tvIncomeLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:drawablePadding="@dimen/space_xs"
-                        android:gravity="center_vertical"
-                        android:text="@string/dashboard_income_month"
-                        android:textAppearance="?attr/textAppearanceLabelMedium"
-                        android:textColor="@color/white"
-                        app:drawableStartCompat="@drawable/ic_trending_up"
-                        app:drawableTint="@color/white" />
-
-                    <TextView
-                        android:id="@+id/tvMonthIncome"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        tools:text="+15.000.000 ₫" />
-                </LinearLayout>
-
-                <!-- Expense box (right half) -->
-                <LinearLayout
-                    android:id="@+id/boxExpense"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_xs"
-                    android:background="@drawable/bg_on_brand_box"
-                    android:orientation="vertical"
-                    android:padding="@dimen/space_m"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintStart_toEndOf="@id/boxIncome"
-                    app:layout_constraintTop_toTopOf="@id/boxIncome">
-
-                    <TextView
-                        android:id="@+id/tvExpenseLabel"
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:drawablePadding="@dimen/space_xs"
-                        android:gravity="center_vertical"
-                        android:text="@string/dashboard_expense_month"
-                        android:textAppearance="?attr/textAppearanceLabelMedium"
-                        android:textColor="@color/white"
-                        app:drawableStartCompat="@drawable/ic_trending_down"
-                        app:drawableTint="@color/white" />
-
-                    <TextView
-                        android:id="@+id/tvMonthExpense"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:layout_marginTop="@dimen/space_xs"
-                        android:ellipsize="end"
-                        android:maxLines="1"
-                        android:textAppearance="?attr/textAppearanceTitleMedium"
-                        android:textColor="@color/white"
-                        android:textStyle="bold"
-                        tools:text="-2.550.000 ₫" />
-                </LinearLayout>
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <!-- Shown when some amounts could not be converted (no cached exchange rate) -->
-            <TextView
-                android:id="@+id/tvMissingRates"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_s"
-                android:text="@string/note_missing_rates"
-                android:textAppearance="?attr/textAppearanceBodySmall"
-                android:textColor="?attr/colorOnSurfaceVariant"
-                android:visibility="gone" />
-
-            <!-- Quick actions -->
-            <LinearLayout
-                android:id="@+id/rowQuickActions"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_l"
-                android:orientation="horizontal">
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnQuickBudgets"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="@dimen/space_xs"
-                    android:layout_weight="1"
-                    android:text="@string/nav_budgets"
-                    app:icon="@drawable/ic_pie_chart" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnQuickCurrency"
-                    style="@style/Widget.Material3.Button.TonalButton"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/space_xs"
-                    android:layout_weight="1"
-                    android:text="@string/action_convert"
-                    app:icon="@drawable/ic_swap" />
-            </LinearLayout>
-
-            <!-- Recent transactions header -->
-            <androidx.constraintlayout.widget.ConstraintLayout
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="@dimen/space_l">
-
-                <TextView
-                    android:id="@+id/tvRecentTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/dashboard_recent"
-                    android:textAppearance="@style/TextAppearance.FinanceTracker.SectionTitle"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-
-                <com.google.android.material.button.MaterialButton
-                    android:id="@+id/btnSeeAll"
-                    style="@style/Widget.Material3.Button.TextButton"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="@string/action_see_all"
-                    app:layout_constraintBottom_toBottomOf="parent"
-                    app:layout_constraintEnd_toEndOf="parent"
-                    app:layout_constraintTop_toTopOf="parent" />
-            </androidx.constraintlayout.widget.ConstraintLayout>
-
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvRecent"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:nestedScrollingEnabled="false"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:itemCount="4"
-                tools:listitem="@layout/item_transaction" />
-
-            <include
-                android:id="@+id/emptyRecent"
-                layout="@layout/layout_empty_state"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:visibility="gone" />
-
-        </LinearLayout>
-    </androidx.core.widget.NestedScrollView>
-
-    <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-        android:id="@+id/fabAddTransaction"
+    <TextView
+        android:id="@+id/tvDashboardTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="bottom|end"
-        android:layout_margin="@dimen/screen_padding"
-        android:text="@string/action_add"
-        app:icon="@drawable/ic_add" />
+        android:text="@string/title_dashboard"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintStart_toStartOf="parent" />
 
-</androidx.coordinatorlayout.widget.CoordinatorLayout>
+    <!-- Danh sách giao dịch gọi lại item_transaction.xml -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTransactions"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="@dimen/margin_medium"
+        app:layout_constraintTop_toBottomOf="@id/tvDashboardTitle"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        tools:listitem="@layout/item_transaction" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

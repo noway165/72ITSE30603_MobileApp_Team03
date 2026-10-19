@@ -1,68 +1,9 @@
-<?xml version="1.0" encoding="utf-8"?>
-<resources>
-    <!-- One DayNight theme: the colors switch automatically through values-night/colors.xml -->
-    <style name="Base.Theme.FinanceTracker" parent="Theme.Material3.DayNight.NoActionBar">
-        <item name="colorPrimary">@color/brand_primary</item>
-        <item name="colorOnPrimary">@color/brand_on_primary</item>
-        <item name="colorPrimaryContainer">@color/brand_primary_container</item>
-        <item name="colorOnPrimaryContainer">@color/brand_on_primary_container</item>
-        <item name="colorSecondary">@color/brand_secondary</item>
-        <item name="colorSecondaryContainer">@color/brand_secondary_container</item>
-        <item name="colorOnSecondaryContainer">@color/brand_on_secondary_container</item>
-        <item name="colorError">@color/expense</item>
-        <item name="android:colorBackground">@color/app_background</item>
-        <item name="colorOnBackground">@color/app_on_background</item>
-        <item name="colorSurface">@color/app_background</item>
-        <item name="colorOnSurface">@color/app_on_background</item>
-        <item name="colorOnSurfaceVariant">@color/text_secondary</item>
-        <item name="colorSurfaceContainerLow">@color/card_background</item>
-        <item name="colorSurfaceContainer">@color/card_background</item>
-        <item name="colorOutline">@color/outline</item>
-        <item name="colorOutlineVariant">@color/outline_variant</item>
-        <item name="materialCardViewStyle">@style/Widget.FinanceTracker.Card</item>
-        <item name="android:windowLightStatusBar">@bool/light_system_bars</item>
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.MoneyManager" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your light theme here. -->
+        <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
     </style>
 
-    <style name="Theme.FinanceTracker" parent="Base.Theme.FinanceTracker" />
-
-    <!-- Default card: white (dark: #1A2321), 16dp corners, no border, soft elevation -->
-    <style name="Widget.FinanceTracker.Card" parent="Widget.Material3.CardView.Elevated">
-        <item name="cardBackgroundColor">@color/card_background</item>
-        <item name="cardCornerRadius">@dimen/card_corner</item>
-        <item name="cardElevation">1dp</item>
-    </style>
-
-    <!-- Section title above a group of cards, e.g. "Recent transactions" -->
-    <style name="TextAppearance.FinanceTracker.SectionTitle" parent="TextAppearance.Material3.TitleMedium">
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <!-- Big money amounts (balance, converter result) -->
-    <style name="TextAppearance.FinanceTracker.Amount" parent="TextAppearance.Material3.HeadlineMedium">
-        <item name="android:textStyle">bold</item>
-    </style>
-
-    <!-- Text on the teal balance card -->
-    <style name="TextAppearance.FinanceTracker.OnBrand" parent="TextAppearance.Material3.BodyMedium">
-        <item name="android:textColor">@color/white</item>
-    </style>
-
-    <!-- Circle swatch in the category color picker -->
-    <style name="Widget.FinanceTracker.ColorChip" parent="Widget.Material3.Chip.Filter">
-        <item name="android:text">@null</item>
-        <item name="chipMinHeight">40dp</item>
-        <item name="chipStartPadding">0dp</item>
-        <item name="chipEndPadding">0dp</item>
-        <item name="textStartPadding">0dp</item>
-        <item name="textEndPadding">0dp</item>
-        <item name="chipStrokeWidth">0dp</item>
-        <item name="checkedIconTint">@color/white</item>
-        <item name="checkedIconVisible">true</item>
-        <item name="shapeAppearanceOverlay">@style/ShapeAppearance.FinanceTracker.Circle</item>
-    </style>
-
-    <style name="ShapeAppearance.FinanceTracker.Circle" parent="">
-        <item name="cornerFamily">rounded</item>
-        <item name="cornerSize">50%</item>
-    </style>
+    <style name="Theme.MoneyManager" parent="Base.Theme.MoneyManager" />
 </resources>

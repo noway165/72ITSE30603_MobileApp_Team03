@@ -1,0 +1,172 @@
+<resources>
+    <!-- Bottom navigation -->
+    <string name="nav_home">Trang chủ</string>
+    <string name="nav_transactions">Giao dịch</string>
+    <string name="nav_budgets">Ngân sách</string>
+    <string name="nav_reports">Báo cáo</string>
+    <string name="nav_profile">Cá nhân</string>
+
+    <!-- Screen titles -->
+    <string name="title_dashboard">Finance Tracker</string>
+    <string name="title_transactions">Giao dịch</string>
+    <string name="title_add_transaction">Thêm giao dịch</string>
+    <string name="title_edit_transaction">Sửa giao dịch</string>
+    <string name="title_budgets">Ngân sách</string>
+    <string name="title_add_budget">Ngân sách mới</string>
+    <string name="title_edit_budget">Sửa ngân sách</string>
+    <string name="title_reports">Báo cáo</string>
+    <string name="title_profile">Cá nhân</string>
+    <string name="title_categories">Danh mục</string>
+    <string name="title_add_category">Danh mục mới</string>
+    <string name="title_edit_category">Sửa danh mục</string>
+    <string name="title_currency_converter">Quy đổi tiền tệ</string>
+    <string name="title_register">Tạo tài khoản</string>
+
+    <!-- Common actions -->
+    <string name="action_add">Thêm</string>
+    <string name="action_save">Lưu</string>
+    <string name="action_cancel">Hủy</string>
+    <string name="action_delete">Xóa</string>
+    <string name="action_edit">Sửa</string>
+    <string name="action_undo">Hoàn tác</string>
+    <string name="action_refresh">Làm mới</string>
+    <string name="action_convert">Quy đổi</string>
+    <string name="action_see_all">Xem tất cả</string>
+    <string name="action_sign_in">Đăng nhập</string>
+    <string name="action_sign_out">Đăng xuất</string>
+    <string name="action_register">Đăng ký</string>
+    <string name="action_create_account">Tạo tài khoản</string>
+    <string name="action_add_transaction">Thêm giao dịch</string>
+    <string name="action_add_budget">Thêm ngân sách</string>
+    <string name="action_add_category">Thêm danh mục</string>
+
+    <!-- Types -->
+    <string name="type_income">Thu nhập</string>
+    <string name="type_expense">Chi tiêu</string>
+
+    <!-- Auth -->
+    <string name="login_subtitle">Theo dõi thu chi và ngân sách, kể cả khi không có mạng.</string>
+    <string name="login_no_account">Chưa có tài khoản?</string>
+    <string name="register_intro">Tạo tài khoản để dữ liệu được lưu an toàn và đồng bộ giữa các thiết bị.</string>
+    <string name="register_have_account">Đã có tài khoản?</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Mật khẩu</string>
+    <string name="hint_confirm_password">Nhập lại mật khẩu</string>
+    <string name="password_rule">Ít nhất 8 ký tự, gồm cả chữ và số</string>
+    <string name="password_weak">Yếu</string>
+    <string name="password_medium">Trung bình</string>
+    <string name="password_strong">Mạnh</string>
+    <string name="error_email_invalid">Email không hợp lệ</string>
+    <string name="error_password_required">Vui lòng nhập mật khẩu</string>
+    <string name="error_password_rule">Mật khẩu cần ít nhất 8 ký tự, gồm cả chữ và số</string>
+    <string name="error_password_mismatch">Mật khẩu nhập lại không khớp</string>
+    <string name="auth_demo_mode_note">Chế độ demo: chưa cấu hình Firebase nên tài khoản chỉ được lưu trên máy này.</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_total_balance">Tổng số dư</string>
+    <string name="dashboard_income_month">Thu nhập</string>
+    <string name="dashboard_expense_month">Chi tiêu</string>
+    <string name="dashboard_recent">Giao dịch gần đây</string>
+    <plurals name="sync_pending_count">
+        <item quantity="other">%d thay đổi đang chờ đồng bộ</item>
+    </plurals>
+    <string name="note_missing_rates">Một số khoản bằng ngoại tệ chưa được tính vì chưa có tỷ giá. Hãy mở màn hình quy đổi tiền tệ khi có mạng để tải tỷ giá.</string>
+
+    <!-- Transactions -->
+    <string name="hint_search_transactions">Tìm theo ghi chú hoặc danh mục</string>
+    <string name="filter_all">Tất cả</string>
+    <string name="filter_category">Danh mục</string>
+    <string name="filter_date">Ngày</string>
+    <string name="filter_all_categories">Tất cả danh mục</string>
+    <plurals name="transaction_summary">
+        <item quantity="other">%1$d giao dịch · Chênh lệch %2$s</item>
+    </plurals>
+    <string name="empty_transactions_title">Chưa có giao dịch</string>
+    <string name="empty_transactions_message">Bấm + để ghi khoản thu hoặc chi đầu tiên.</string>
+    <string name="empty_filter_title">Không có kết quả</string>
+    <string name="empty_filter_message">Thử từ khóa khác hoặc bỏ bộ lọc.</string>
+    <string name="transaction_deleted">Đã xóa giao dịch</string>
+    <string name="transaction_saved">Đã lưu giao dịch</string>
+    <string name="uncategorized">Chưa phân loại</string>
+    <string name="confirm_delete_transaction">Xóa giao dịch này?</string>
+
+    <!-- Add / edit transaction -->
+    <string name="hint_amount">Số tiền</string>
+    <string name="hint_currency">Tiền tệ</string>
+    <string name="hint_category">Danh mục</string>
+    <string name="hint_date">Ngày</string>
+    <string name="hint_note">Ghi chú (không bắt buộc)</string>
+    <string name="error_amount_invalid">Nhập số tiền lớn hơn 0</string>
+    <string name="error_category_required">Chọn một danh mục</string>
+
+    <!-- Budgets -->
+    <string name="budget_total_spent">Đã chi trong tháng</string>
+    <string name="budget_spent_of_limit">%1$s / %2$s</string>
+    <string name="budget_left">Còn %s</string>
+    <string name="budget_over_by">Vượt ngân sách %s</string>
+    <string name="budget_month">Ngân sách tháng %s</string>
+    <string name="hint_expense_category">Danh mục chi tiêu</string>
+    <string name="hint_monthly_limit">Hạn mức mỗi tháng</string>
+    <string name="error_budget_exists">Danh mục này đã có ngân sách trong tháng</string>
+    <string name="empty_budgets_title">Tháng này chưa có ngân sách</string>
+    <string name="empty_budgets_message">Đặt hạn mức cho một danh mục để theo dõi chi tiêu.</string>
+    <string name="budget_deleted">Đã xóa ngân sách</string>
+
+    <!-- Categories -->
+    <string name="hint_category_name">Tên danh mục</string>
+    <string name="label_color">Màu</string>
+    <plurals name="category_usage">
+        <item quantity="other">%d giao dịch</item>
+    </plurals>
+    <string name="empty_categories_title">Chưa có danh mục</string>
+    <string name="empty_categories_message">Bấm + để tạo danh mục.</string>
+    <string name="confirm_delete_category">Xóa \"%s\"? Các giao dịch của danh mục sẽ thành Chưa phân loại và ngân sách của nó sẽ bị xóa.</string>
+    <string name="error_name_required">Vui lòng nhập tên</string>
+    <string name="color_red">Đỏ</string>
+    <string name="color_orange">Cam</string>
+    <string name="color_amber">Vàng</string>
+    <string name="color_green">Xanh lá</string>
+    <string name="color_teal">Xanh ngọc</string>
+    <string name="color_blue">Xanh dương</string>
+    <string name="color_purple">Tím</string>
+    <string name="color_pink">Hồng</string>
+
+    <!-- Reports -->
+    <string name="report_by_category">Chi tiêu theo danh mục</string>
+    <string name="report_last_6_months">Thu và chi 6 tháng gần nhất</string>
+    <string name="report_no_expense">Tháng này chưa có khoản chi nào</string>
+
+    <!-- Currency converter -->
+    <string name="hint_from">Từ</string>
+    <string name="hint_to">Sang</string>
+    <string name="converter_result">Số tiền quy đổi</string>
+    <string name="converter_rate">1 %1$s = %2$s %3$s</string>
+    <string name="converter_rates_title">Tỷ giá</string>
+    <string name="converter_updated_at">Cập nhật %s</string>
+    <string name="converter_never_updated">Chưa tải tỷ giá</string>
+    <string name="converter_offline_note">Bạn đang offline. Đang dùng tỷ giá đã lưu gần nhất.</string>
+    <string name="converter_no_rate">Chưa có tỷ giá cho cặp tiền này</string>
+
+    <!-- Profile -->
+    <string name="section_preferences">Tùy chọn</string>
+    <string name="section_data">Dữ liệu</string>
+    <string name="hint_default_currency">Tiền tệ mặc định</string>
+    <string name="setting_dark_mode">Chế độ tối</string>
+    <string name="setting_manage_categories">Quản lý danh mục</string>
+    <string name="setting_sync_now">Đồng bộ ngay</string>
+    <string name="last_sync">Đồng bộ lần cuối: %s</string>
+    <string name="last_sync_never">Chưa đồng bộ</string>
+    <string name="sync_not_configured">Đồng bộ đám mây đang tắt (chưa cấu hình MockAPI)</string>
+    <string name="account_type_firebase">Tài khoản Firebase</string>
+    <string name="account_type_local">Tài khoản demo trên máy này</string>
+    <string name="confirm_sign_out">Đăng xuất khỏi Finance Tracker?</string>
+    <string name="app_version">Finance Tracker %s</string>
+
+    <!-- Accessibility -->
+    <string name="cd_back">Quay lại</string>
+    <string name="cd_close">Đóng</string>
+    <string name="cd_previous_month">Tháng trước</string>
+    <string name="cd_next_month">Tháng sau</string>
+    <string name="cd_swap_currencies">Đảo hai loại tiền</string>
+    <string name="cd_waiting_to_sync">Đang chờ đồng bộ</string>
+</resources>

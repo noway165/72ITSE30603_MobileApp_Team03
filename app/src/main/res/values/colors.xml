@@ -1,0 +1,45 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Finance Tracker palette (light). The same names are redefined in values-night/colors.xml. -->
+<resources>
+    <!-- Brand (teal) -->
+    <color name="brand_primary">#0F766E</color>
+    <color name="brand_on_primary">#FFFFFF</color>
+    <color name="brand_primary_container">#CCF2EC</color>
+    <color name="brand_on_primary_container">#00201C</color>
+    <color name="brand_secondary">#4A635F</color>
+    <color name="brand_secondary_container">#DDEBE8</color>
+    <color name="brand_on_secondary_container">#051F1C</color>
+
+    <!-- Surfaces and text -->
+    <color name="app_background">#F4F7F6</color>
+    <color name="app_on_background">#161D1C</color>
+    <color name="card_background">#FFFFFF</color>
+    <color name="text_secondary">#5F6B69</color>
+    <color name="outline">#C3CCCA</color>
+    <color name="outline_variant">#E2E8E6</color>
+
+    <!-- Money semantics -->
+    <color name="income">#15803D</color>
+    <color name="income_container">#DCFCE7</color>
+    <color name="expense">#DC2626</color>
+    <color name="expense_container">#FEE2E2</color>
+    <color name="warning">#B45309</color>
+    <color name="warning_container">#FEF3C7</color>
+
+    <!-- Balance card gradient -->
+    <color name="balance_gradient_start">#0F766E</color>
+    <color name="balance_gradient_end">#115E59</color>
+
+    <!-- Category colors offered in the category dialog -->
+    <color name="category_red">#EF4444</color>
+    <color name="category_orange">#F97316</color>
+    <color name="category_amber">#F59E0B</color>
+    <color name="category_green">#22C55E</color>
+    <color name="category_teal">#14B8A6</color>
+    <color name="category_blue">#3B82F6</color>
+    <color name="category_purple">#8B5CF6</color>
+    <color name="category_pink">#EC4899</color>
+
+    <color name="white">#FFFFFF</color>
+    <color name="black">#000000</color>
+</resources>

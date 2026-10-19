@@ -1,0 +1,165 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Transactions: search box, filter chips (type / category / date range), result summary,
+     RecyclerView (ListAdapter + DiffUtil, swipe to delete), empty state, FAB to add.
+     ONE flat ConstraintLayout: Guidelines for the side margins, a Flow helper that wraps the chips
+     (replaces HorizontalScrollView + LinearLayout + ChipGroup), the list fills the rest. -->
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    tools:context=".feature.transaction.ui.TransactionListFragment">
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineStart"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.05" />
+
+    <androidx.constraintlayout.widget.Guideline
+        android:id="@+id/guidelineEnd"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        app:layout_constraintGuide_percent="0.95" />
+
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/tilSearch"
+        style="@style/Widget.Material3.TextInputLayout.OutlinedBox.Dense"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_s"
+        android:hint="@string/hint_search_transactions"
+        app:boxCornerRadiusBottomEnd="@dimen/corner_pill"
+        app:boxCornerRadiusBottomStart="@dimen/corner_pill"
+        app:boxCornerRadiusTopEnd="@dimen/corner_pill"
+        app:boxCornerRadiusTopStart="@dimen/corner_pill"
+        app:endIconMode="clear_text"
+        app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
+        app:layout_constraintStart_toStartOf="@id/guidelineStart"
+        app:layout_constraintTop_toTopOf="parent"
+        app:startIconDrawable="@drawable/ic_search">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/edtSearch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:imeOptions="actionSearch"
+            android:inputType="text"
+            android:maxLines="1" />
+    </com.google.android.material.textfield.TextInputLayout>
+
+    <!-- Filter chips: direct children of the ConstraintLayout, laid out by the Flow below.
+         Type chips (All / Income / Expense) behave as a single-choice group in Kotlin. -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipAll"
+        style="@style/Widget.Material3.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:checked="true"
+        android:text="@string/filter_all" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipIncome"
+        style="@style/Widget.Material3.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/type_income" />
+
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipExpense"
+        style="@style/Widget.Material3.Chip.Filter"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/type_expense" />
+
+    <!-- Opens a category picker; shows the chosen category and an X to clear it -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipCategory"
+        style="@style/Widget.Material3.Chip.Assist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/filter_category"
+        app:chipIcon="@drawable/ic_label"
+        app:closeIconVisible="false" />
+
+    <!-- Opens MaterialDatePicker.dateRangePicker(); shows "01/10 - 31/10" when set -->
+    <com.google.android.material.chip.Chip
+        android:id="@+id/chipDateRange"
+        style="@style/Widget.Material3.Chip.Assist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/filter_date"
+        app:chipIcon="@drawable/ic_calendar"
+        app:closeIconVisible="false" />
+
+    <!-- Flow = a chain that wraps onto a new row when the screen is too narrow -->
+    <androidx.constraintlayout.helper.widget.Flow
+        android:id="@+id/flowFilters"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        app:constraint_referenced_ids="chipAll,chipIncome,chipExpense,chipCategory,chipDateRange"
+        app:flow_horizontalAlign="start"
+        app:flow_horizontalBias="0"
+        app:flow_horizontalGap="@dimen/space_s"
+        app:flow_horizontalStyle="packed"
+        app:flow_verticalGap="@dimen/space_xs"
+        app:flow_wrapMode="chain"
+        app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
+        app:layout_constraintStart_toStartOf="@id/guidelineStart"
+        app:layout_constraintTop_toBottomOf="@id/tilSearch" />
+
+    <TextView
+        android:id="@+id/tvResultSummary"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        android:textAppearance="?attr/textAppearanceBodySmall"
+        android:textColor="?attr/colorOnSurfaceVariant"
+        app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
+        app:layout_constraintStart_toStartOf="@id/guidelineStart"
+        app:layout_constraintTop_toBottomOf="@id/flowFilters"
+        tools:text="24 transactions · Net -1.250.000 ₫" />
+
+    <!-- 0dp x 0dp = fills the space between the summary and the bottom edge -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvTransactions"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/screen_padding"
+        android:paddingTop="@dimen/space_s"
+        android:paddingBottom="@dimen/fab_clearance"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvResultSummary"
+        tools:itemCount="8"
+        tools:listitem="@layout/item_transaction" />
+
+    <include
+        android:id="@+id/emptyTransactions"
+        layout="@layout/layout_empty_state"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/tvResultSummary"
+        app:layout_constraintVertical_bias="0.4" />
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/fabAddTransaction"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_margin="@dimen/screen_padding"
+        android:contentDescription="@string/action_add_transaction"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:srcCompat="@drawable/ic_add" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

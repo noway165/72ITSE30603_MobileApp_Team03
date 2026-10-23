@@ -84,9 +84,9 @@
 
         <ImageView
             android:id="@+id/ivSyncPending"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
-            android:layout_marginTop="2dp"
+            android:layout_width="@dimen/icon_small"
+            android:layout_height="@dimen/icon_small"
+            android:layout_marginTop="@dimen/space_xxs"
             android:contentDescription="@string/cd_waiting_to_sync"
             android:src="@drawable/ic_sync"
             android:visibility="gone"

@@ -169,4 +169,11 @@
     <string name="cd_next_month">Tháng sau</string>
     <string name="cd_swap_currencies">Đảo hai loại tiền</string>
     <string name="cd_waiting_to_sync">Đang chờ đồng bộ</string>
+
+    <!-- Bổ sung ở Milestone 2 (MVVM) -->
+    <string name="error_sign_in_failed">Email hoặc mật khẩu không đúng</string>
+    <string name="error_email_taken">Email này đã được đăng ký</string>
+    <string name="auth_demo_mode_with_account">Chế độ demo: chưa cấu hình Firebase nên tài khoản chỉ được lưu trên máy này.\nTài khoản dùng thử: %1$s / %2$s</string>
+    <string name="sync_done">Đã đồng bộ tất cả thay đổi</string>
+    <string name="category_deleted">Đã xóa danh mục</string>
 </resources>

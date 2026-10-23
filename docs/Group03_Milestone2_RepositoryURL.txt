@@ -1,0 +1,6 @@
+Group 03 - 72ITSE30603 Mobile App - Milestone 2 (MVVM)
+
+Source repository:
+https://github.com/noway165/72ITSE30603_MobileApp_Team03
+
+Architecture notes and requirement checklist: docs/MVVM_ARCHITECTURE.md

@@ -1,8 +1,185 @@
-<?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="app_name">MoneyManager</string>
-    <string name="title_dashboard">Tổng quan tài chính</string>
-    <string name="title_report">Báo cáo chi tiêu</string>
-    <string name="hint_amount">Nhập số tiền</string>
-    <string name="btn_convert">Chuyển đổi</string>
+    <string name="app_name" translatable="false">Finance Tracker</string>
+
+    <!-- Bottom navigation -->
+    <string name="nav_home">Home</string>
+    <string name="nav_transactions">Transactions</string>
+    <string name="nav_budgets">Budgets</string>
+    <string name="nav_reports">Reports</string>
+    <string name="nav_profile">Profile</string>
+
+    <!-- Screen titles -->
+    <string name="title_dashboard">Finance Tracker</string>
+    <string name="title_transactions">Transactions</string>
+    <string name="title_add_transaction">Add transaction</string>
+    <string name="title_edit_transaction">Edit transaction</string>
+    <string name="title_budgets">Budgets</string>
+    <string name="title_add_budget">New budget</string>
+    <string name="title_edit_budget">Edit budget</string>
+    <string name="title_reports">Reports</string>
+    <string name="title_profile">Profile</string>
+    <string name="title_categories">Categories</string>
+    <string name="title_add_category">New category</string>
+    <string name="title_edit_category">Edit category</string>
+    <string name="title_currency_converter">Currency converter</string>
+    <string name="title_register">Create account</string>
+
+    <!-- Common actions -->
+    <string name="action_add">Add</string>
+    <string name="action_save">Save</string>
+    <string name="action_cancel">Cancel</string>
+    <string name="action_delete">Delete</string>
+    <string name="action_edit">Edit</string>
+    <string name="action_undo">Undo</string>
+    <string name="action_refresh">Refresh</string>
+    <string name="action_convert">Convert</string>
+    <string name="action_see_all">See all</string>
+    <string name="action_sign_in">Sign in</string>
+    <string name="action_sign_out">Sign out</string>
+    <string name="action_register">Register</string>
+    <string name="action_create_account">Create account</string>
+    <string name="action_add_transaction">Add transaction</string>
+    <string name="action_add_budget">Add budget</string>
+    <string name="action_add_category">Add category</string>
+
+    <!-- Types -->
+    <string name="type_income">Income</string>
+    <string name="type_expense">Expense</string>
+
+    <!-- Auth -->
+    <string name="login_subtitle">Track income, expenses and budgets, even offline.</string>
+    <string name="login_no_account">Don\'t have an account?</string>
+    <string name="register_intro">Create an account to keep your records safe and synced across devices.</string>
+    <string name="register_have_account">Already have an account?</string>
+    <string name="hint_email">Email</string>
+    <string name="hint_password">Password</string>
+    <string name="hint_confirm_password">Confirm password</string>
+    <string name="password_rule">At least 8 characters with letters and numbers</string>
+    <string name="password_weak">Weak</string>
+    <string name="password_medium">Medium</string>
+    <string name="password_strong">Strong</string>
+    <string name="error_email_invalid">Enter a valid email address</string>
+    <string name="error_password_required">Enter your password</string>
+    <string name="error_password_rule">Use at least 8 characters with letters and numbers</string>
+    <string name="error_password_mismatch">Passwords do not match</string>
+    <string name="auth_demo_mode_note">Demo mode: Firebase is not configured yet, so accounts are stored only on this device.</string>
+
+    <!-- Dashboard -->
+    <string name="dashboard_total_balance">Total balance</string>
+    <string name="dashboard_income_month">Income</string>
+    <string name="dashboard_expense_month">Expense</string>
+    <string name="dashboard_recent">Recent transactions</string>
+    <plurals name="sync_pending_count">
+        <item quantity="one">%d change is waiting to sync</item>
+        <item quantity="other">%d changes are waiting to sync</item>
+    </plurals>
+    <string name="note_missing_rates">Some amounts in other currencies are not included because no exchange rate is saved yet. Open the currency converter while online to download rates.</string>
+
+    <!-- Transactions -->
+    <string name="hint_search_transactions">Search note or category</string>
+    <string name="filter_all">All</string>
+    <string name="filter_category">Category</string>
+    <string name="filter_date">Date</string>
+    <string name="filter_all_categories">All categories</string>
+    <plurals name="transaction_summary">
+        <item quantity="one">%1$d transaction · Net %2$s</item>
+        <item quantity="other">%1$d transactions · Net %2$s</item>
+    </plurals>
+    <string name="empty_transactions_title">No transactions yet</string>
+    <string name="empty_transactions_message">Tap + to record your first income or expense.</string>
+    <string name="empty_filter_title">Nothing matches</string>
+    <string name="empty_filter_message">Try another keyword or clear the filters.</string>
+    <string name="transaction_deleted">Transaction deleted</string>
+    <string name="transaction_saved">Transaction saved</string>
+    <string name="uncategorized">Uncategorized</string>
+    <string name="confirm_delete_transaction">Delete this transaction?</string>
+
+    <!-- Add / edit transaction -->
+    <string name="hint_amount">Amount</string>
+    <string name="hint_currency">Currency</string>
+    <string name="hint_category">Category</string>
+    <string name="hint_date">Date</string>
+    <string name="hint_note">Note (optional)</string>
+    <string name="error_amount_invalid">Enter an amount greater than 0</string>
+    <string name="error_category_required">Choose a category</string>
+
+    <!-- Budgets -->
+    <string name="budget_total_spent">Spent this month</string>
+    <string name="budget_spent_of_limit">%1$s / %2$s</string>
+    <string name="budget_left">%s left</string>
+    <string name="budget_over_by">Over budget by %s</string>
+    <string name="budget_month">Budget for %s</string>
+    <string name="hint_expense_category">Expense category</string>
+    <string name="hint_monthly_limit">Monthly limit</string>
+    <string name="error_budget_exists">This category already has a budget for this month</string>
+    <string name="empty_budgets_title">No budgets this month</string>
+    <string name="empty_budgets_message">Set a monthly limit for a category to track your spending.</string>
+    <string name="budget_deleted">Budget deleted</string>
+
+    <!-- Categories -->
+    <string name="hint_category_name">Category name</string>
+    <string name="label_color">Color</string>
+    <plurals name="category_usage">
+        <item quantity="one">%d transaction</item>
+        <item quantity="other">%d transactions</item>
+    </plurals>
+    <string name="empty_categories_title">No categories</string>
+    <string name="empty_categories_message">Tap + to create a category.</string>
+    <string name="confirm_delete_category">Delete \"%s\"? Its transactions become Uncategorized and its budgets are removed.</string>
+    <string name="error_name_required">Enter a name</string>
+    <string name="color_red">Red</string>
+    <string name="color_orange">Orange</string>
+    <string name="color_amber">Amber</string>
+    <string name="color_green">Green</string>
+    <string name="color_teal">Teal</string>
+    <string name="color_blue">Blue</string>
+    <string name="color_purple">Purple</string>
+    <string name="color_pink">Pink</string>
+
+    <!-- Reports -->
+    <string name="report_by_category">Spending by category</string>
+    <string name="report_last_6_months">Income vs expense, last 6 months</string>
+    <string name="report_no_expense">No expenses in this month</string>
+
+    <!-- Currency converter -->
+    <string name="hint_from">From</string>
+    <string name="hint_to">To</string>
+    <string name="converter_result">Converted amount</string>
+    <string name="converter_rate">1 %1$s = %2$s %3$s</string>
+    <string name="converter_rates_title">Exchange rates</string>
+    <string name="converter_updated_at">Updated %s</string>
+    <string name="converter_never_updated">Rates have not been downloaded yet</string>
+    <string name="converter_offline_note">You are offline. Showing the last saved rates.</string>
+    <string name="converter_no_rate">No rate available for this pair yet</string>
+
+    <!-- Profile -->
+    <string name="section_preferences">Preferences</string>
+    <string name="section_data">Data</string>
+    <string name="hint_default_currency">Default currency</string>
+    <string name="setting_dark_mode">Dark mode</string>
+    <string name="setting_manage_categories">Manage categories</string>
+    <string name="setting_sync_now">Sync now</string>
+    <string name="last_sync">Last synced: %s</string>
+    <string name="last_sync_never">Not synced yet</string>
+    <string name="sync_not_configured">Cloud sync is off (MockAPI URL not set)</string>
+    <string name="account_type_firebase">Firebase account</string>
+    <string name="account_type_local">Demo account on this device</string>
+    <string name="confirm_sign_out">Sign out of Finance Tracker?</string>
+    <string name="app_version">Finance Tracker %s</string>
+
+    <!-- Accessibility -->
+    <string name="cd_back">Back</string>
+    <string name="cd_close">Close</string>
+    <string name="cd_previous_month">Previous month</string>
+    <string name="cd_next_month">Next month</string>
+    <string name="cd_swap_currencies">Swap currencies</string>
+    <string name="cd_waiting_to_sync">Waiting to sync</string>
+
+    <!-- Added in Milestone 2 (MVVM) -->
+    <string name="error_sign_in_failed">Incorrect email or password</string>
+    <string name="error_email_taken">An account with this email already exists</string>
+    <string name="auth_demo_mode_with_account">Demo mode: Firebase is not configured yet, so accounts are stored only on this device.\nDemo account: %1$s / %2$s</string>
+    <string name="sync_done">All changes are synced</string>
+    <string name="category_deleted">Category deleted</string>
+    <string name="percent_value" translatable="false">%d%%</string>
 </resources>

@@ -1,6 +1,9 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Budgets of one month: month switcher, overall summary card, one card per category budget
-     (progress bar + over-budget warning), empty state, FAB to add a budget. -->
+     (progress bar + over-budget warning), empty state, FAB to add a budget.
+     The month switcher and summary card sit in an AppBarLayout with scroll|enterAlways, so on a short
+     screen (small phone, landscape) they scroll away with the list instead of squeezing it to one row,
+     and come back as soon as the user scrolls up. -->
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
@@ -8,20 +11,25 @@
     android:layout_height="match_parent"
     tools:context=".feature.budget.ui.BudgetFragment">
 
-    <LinearLayout
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarBudget"
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp"
+        app:liftOnScroll="false">
 
         <include
             android:id="@+id/monthSelector"
             layout="@layout/layout_month_selector"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content" />
+            android:layout_height="wrap_content"
+            app:layout_scrollFlags="scroll|enterAlways" />
 
         <!-- Total of all budgets in the month -->
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardBudgetSummary"
+            app:layout_scrollFlags="scroll|enterAlways"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginHorizontal="@dimen/screen_padding"
@@ -97,32 +105,33 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
+    </com.google.android.material.appbar.AppBarLayout>
 
-        <FrameLayout
+    <!-- Placed below the AppBarLayout by the scrolling behavior; the RecyclerView inside drives the collapse -->
+    <FrameLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior">
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvBudgets"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_height="match_parent"
+            android:clipToPadding="false"
+            android:paddingHorizontal="@dimen/screen_padding"
+            android:paddingBottom="@dimen/fab_clearance"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:itemCount="4"
+            tools:listitem="@layout/item_budget" />
 
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/rvBudgets"
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:clipToPadding="false"
-                android:paddingHorizontal="@dimen/screen_padding"
-                android:paddingBottom="@dimen/fab_clearance"
-                app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-                tools:itemCount="4"
-                tools:listitem="@layout/item_budget" />
-
-            <include
-                android:id="@+id/emptyBudgets"
-                layout="@layout/layout_empty_state"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_gravity="center"
-                android:visibility="gone" />
-        </FrameLayout>
-    </LinearLayout>
+        <include
+            android:id="@+id/emptyBudgets"
+            layout="@layout/layout_empty_state"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:visibility="gone" />
+    </FrameLayout>
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddBudget"

@@ -59,6 +59,11 @@
         <item name="checkedIconTint">@color/white</item>
         <item name="checkedIconVisible">true</item>
         <item name="shapeAppearanceOverlay">@style/ShapeAppearance.FinanceTracker.Circle</item>
+        <!-- Milestone 2 fix: with no text the chip's content is ~0dp wide, so the default 48dp touch-target
+             insets took the whole 40dp swatch and the colors were not drawn. The 40dp swatch is the target. -->
+        <item name="ensureMinTouchTargetSize">false</item>
+        <!-- Centers the 18dp check mark in the 40dp circle: (40 - 18) / 2 -->
+        <item name="iconStartPadding">11dp</item>
     </style>
 
     <style name="ShapeAppearance.FinanceTracker.Circle" parent="">

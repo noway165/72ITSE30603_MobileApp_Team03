@@ -13,7 +13,6 @@ import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.data.AppContainer
 import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.TransactionType
-import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 
@@ -26,8 +25,7 @@ data class CategoryUiState(
 
 class CategoryViewModel(
     private val categoryRepository: CategoryRepository = AppContainer.categoryRepository,
-    private val transactionRepository: TransactionRepository = AppContainer.transactionRepository,
-    private val budgetRepository: BudgetRepository = AppContainer.budgetRepository
+    transactionRepository: TransactionRepository = AppContainer.transactionRepository
 ) : ViewModel() {
 
     private val selectedType = MutableStateFlow(TransactionType.EXPENSE)
@@ -71,13 +69,11 @@ class CategoryViewModel(
     }
 
     /**
-     * Its transactions become Uncategorized and its budgets are removed (as the confirm dialog says).
-     * Once transactions and budgets are Room tables, their foreign keys (ON DELETE SET NULL / CASCADE)
-     * do this in the database and the first two calls can go.
+     * Its transactions become Uncategorized and its budgets are removed (as the confirm dialog says):
+     * the foreign keys of "transactions" (ON DELETE SET NULL) and "budgets" (ON DELETE CASCADE) do this
+     * inside the same SQLite delete.
      */
     fun deleteCategory(categoryId: Long) {
-        transactionRepository.clearCategory(categoryId)
-        budgetRepository.deleteByCategory(categoryId)
         viewModelScope.launch { categoryRepository.delete(categoryId) }
     }
 }

@@ -1,45 +1,49 @@
 package vn.edu.vlu.moneymanager.data.repository
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import vn.edu.vlu.moneymanager.data.local.dao.TransactionDao
+import vn.edu.vlu.moneymanager.data.local.entity.TransactionEntity
 import vn.edu.vlu.moneymanager.data.model.Transaction
-import vn.edu.vlu.moneymanager.data.source.SampleData
 
-/** In-memory store of transactions, newest first. Room will replace the MutableStateFlow later. */
-class TransactionRepository {
+/**
+ * Transactions stored in the Room table "transactions", newest first. The rest of the app only sees the
+ * [Transaction] model: entities stay inside the data layer.
+ *
+ * Deleting a category needs nothing here: its foreign key (ON DELETE SET NULL) makes the rows "Uncategorized".
+ */
+class TransactionRepository(private val transactionDao: TransactionDao) {
 
-    private val _transactions = MutableStateFlow(SampleData.transactions.sortedByDescending { it.dateMillis })
-    val transactions: StateFlow<List<Transaction>> = _transactions.asStateFlow()
+    /** Re-emits after every insert / update / delete, so Transactions, Dashboard, Budgets and Reports stay in sync. */
+    val transactions: Flow<List<Transaction>> =
+        transactionDao.observeAll().map { rows -> rows.map(TransactionEntity::toModel) }
 
-    private var nextId = (SampleData.transactions.maxOfOrNull { it.id } ?: 0L) + 1
+    suspend fun get(id: Long): Transaction? = transactionDao.getById(id)?.toModel()
 
-    fun get(id: Long): Transaction? = _transactions.value.firstOrNull { it.id == id }
-
-    /** Inserts when [transaction] has id 0, otherwise replaces the row with the same id. */
-    fun save(transaction: Transaction): Transaction {
-        val saved = if (transaction.id == 0L) transaction.copy(id = nextId++) else transaction
-        _transactions.update { list ->
-            (list.filterNot { it.id == saved.id } + saved).sortedByDescending { it.dateMillis }
+    /** Inserts when [transaction] has id 0 (Room assigns the id), otherwise updates the row with the same id. */
+    suspend fun save(transaction: Transaction): Transaction {
+        val entity = TransactionEntity.fromModel(transaction)
+        return if (transaction.id == 0L) {
+            transaction.copy(id = transactionDao.insert(entity))
+        } else {
+            transactionDao.update(entity)
+            transaction
         }
-        return saved
     }
 
-    fun delete(id: Long): Transaction? {
+    /** Puts a deleted transaction back with its old id (undo). */
+    suspend fun restore(transaction: Transaction) {
+        transactionDao.insert(TransactionEntity.fromModel(transaction))
+    }
+
+    /** Returns the removed transaction (for undo), or null when the id does not exist. */
+    suspend fun delete(id: Long): Transaction? {
         val removed = get(id) ?: return null
-        _transactions.update { list -> list.filterNot { it.id == id } }
+        transactionDao.deleteById(id)
         return removed
     }
 
-    /** Called when a category is deleted: its transactions become "Uncategorized". */
-    fun clearCategory(categoryId: Long) {
-        _transactions.update { list ->
-            list.map { if (it.categoryId == categoryId) it.copy(categoryId = null, pendingSync = true) else it }
-        }
-    }
-
-    fun markAllSynced() {
-        _transactions.update { list -> list.map { it.copy(pendingSync = false) } }
+    suspend fun markAllSynced() {
+        transactionDao.markAllSynced()
     }
 }

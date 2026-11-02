@@ -24,10 +24,11 @@ import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionE
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionUiState
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionViewModel
 import vn.edu.vlu.moneymanager.sampleCategoryRepository
+import vn.edu.vlu.moneymanager.sampleTransactionRepository
 
 /**
- * AddEditTransactionViewModel takes its repositories from AppContainer (shared by every test),
- * so each test compares against the repository state it reads first instead of fixed sizes.
+ * AddEditTransactionViewModel takes its repositories from AppContainer, so each test puts fresh
+ * repositories over in-memory DAOs there (unit tests have no Room database).
  */
 @OptIn(ExperimentalCoroutinesApi::class)
 class AddEditTransactionViewModelTest {
@@ -35,12 +36,12 @@ class AddEditTransactionViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repo = AppContainer.transactionRepository
+    private val repo = sampleTransactionRepository()
 
-    /** Categories now come from Room; unit tests have no database, so AppContainer gets an in-memory one. */
     @Before
-    fun useInMemoryCategories() {
+    fun useInMemoryRepositories() {
         AppContainer.categoryRepository = sampleCategoryRepository()
+        AppContainer.transactionRepository = repo
     }
 
     private fun TestScope.collectUiState(viewModel: AddEditTransactionViewModel) {
@@ -69,21 +70,21 @@ class AddEditTransactionViewModelTest {
     fun save_withoutAmountAndCategory_showsBothErrors_andSavesNothing() = runTest {
         val viewModel = AddEditTransactionViewModel(SavedStateHandle())
         collectUiState(viewModel)
-        val before = repo.transactions.value
+        val before = repo.transactions.first()
 
         viewModel.save()
 
         val form = currentState(viewModel).form
         assertEquals(R.string.error_amount_invalid, form.amountError)
         assertEquals(R.string.error_category_required, form.categoryError)
-        assertEquals(before, repo.transactions.value)
+        assertEquals(before, repo.transactions.first())
     }
 
     @Test
     fun save_withZeroAmount_showsAmountError() = runTest {
         val viewModel = AddEditTransactionViewModel(SavedStateHandle())
         collectUiState(viewModel)
-        val before = repo.transactions.value
+        val before = repo.transactions.first()
 
         viewModel.onAmountChanged("0")
         viewModel.onCategorySelected(1L)
@@ -92,14 +93,14 @@ class AddEditTransactionViewModelTest {
         val form = currentState(viewModel).form
         assertEquals(R.string.error_amount_invalid, form.amountError)
         assertNull(form.categoryError)
-        assertEquals(before, repo.transactions.value)
+        assertEquals(before, repo.transactions.first())
     }
 
     @Test
     fun save_withoutCategory_showsOnlyCategoryError() = runTest {
         val viewModel = AddEditTransactionViewModel(SavedStateHandle())
         collectUiState(viewModel)
-        val before = repo.transactions.value
+        val before = repo.transactions.first()
 
         viewModel.onAmountChanged("50000")
         viewModel.save()
@@ -107,7 +108,7 @@ class AddEditTransactionViewModelTest {
         val form = currentState(viewModel).form
         assertNull(form.amountError)
         assertEquals(R.string.error_category_required, form.categoryError)
-        assertEquals(before, repo.transactions.value)
+        assertEquals(before, repo.transactions.first())
     }
 
     @Test
@@ -142,8 +143,8 @@ class AddEditTransactionViewModelTest {
     fun save_validNewTransaction_addsItAndFinishes() = runTest {
         val viewModel = AddEditTransactionViewModel(SavedStateHandle())
         collectUiState(viewModel)
-        val sizeBefore = repo.transactions.value.size
-        val maxIdBefore = repo.transactions.value.maxOf { it.id }
+        val sizeBefore = repo.transactions.first().size
+        val maxIdBefore = repo.transactions.first().maxOf { it.id }
 
         viewModel.onAmountChanged("85,000")
         viewModel.onCategorySelected(1L)
@@ -151,8 +152,8 @@ class AddEditTransactionViewModelTest {
         viewModel.save()
 
         assertEquals(AddEditTransactionEvent.Finished(R.string.transaction_saved), viewModel.events.first())
-        assertEquals(sizeBefore + 1, repo.transactions.value.size)
-        val saved = repo.transactions.value.first { it.id > maxIdBefore }
+        assertEquals(sizeBefore + 1, repo.transactions.first().size)
+        val saved = repo.transactions.first().first { it.id > maxIdBefore }
         assertEquals(85_000.0, saved.amount, 0.0)
         assertEquals(1L, saved.categoryId)
         assertEquals("Lunch", saved.note)
@@ -163,7 +164,7 @@ class AddEditTransactionViewModelTest {
     @Test
     fun editMode_loadsExistingTransaction_andSaveUpdatesIt() = runTest {
         val existing = repo.get(1L)!!
-        val sizeBefore = repo.transactions.value.size
+        val sizeBefore = repo.transactions.first().size
         val viewModel = AddEditTransactionViewModel(SavedStateHandle(mapOf("transaction_id" to 1L)))
         collectUiState(viewModel)
 
@@ -178,7 +179,7 @@ class AddEditTransactionViewModelTest {
         viewModel.save()
 
         assertEquals(AddEditTransactionEvent.Finished(R.string.transaction_saved), viewModel.events.first())
-        assertEquals(sizeBefore, repo.transactions.value.size)
+        assertEquals(sizeBefore, repo.transactions.first().size)
         assertEquals(123_456.0, repo.get(1L)!!.amount, 0.0)
         state = currentState(viewModel)
         assertTrue(state.isEditMode)

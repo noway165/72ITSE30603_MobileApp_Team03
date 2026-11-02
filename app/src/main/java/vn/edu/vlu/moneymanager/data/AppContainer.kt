@@ -25,7 +25,17 @@ object AppContainer {
     }
 
     val authRepository by lazy { AuthRepository() }
-    val transactionRepository by lazy { TransactionRepository() }
+
+    private var transactionRepositoryInstance: TransactionRepository? = null
+
+    /** Created on first use from the Room DAO; JVM unit tests set a repository over a fake DAO instead. */
+    var transactionRepository: TransactionRepository
+        get() = transactionRepositoryInstance
+            ?: TransactionRepository(database.transactionDao()).also { transactionRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            transactionRepositoryInstance = value
+        }
 
     private var categoryRepositoryInstance: CategoryRepository? = null
 
@@ -41,7 +51,17 @@ object AppContainer {
             categoryRepositoryInstance = value
         }
 
-    val budgetRepository by lazy { BudgetRepository() }
+    private var budgetRepositoryInstance: BudgetRepository? = null
+
+    /** Created on first use from the Room DAO; JVM unit tests set a repository over a fake DAO instead. */
+    var budgetRepository: BudgetRepository
+        get() = budgetRepositoryInstance
+            ?: BudgetRepository(database.budgetDao()).also { budgetRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            budgetRepositoryInstance = value
+        }
+
     val currencyRepository by lazy { CurrencyRepository() }
     val settingsRepository by lazy { SettingsRepository() }
 }

@@ -15,8 +15,7 @@ import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.collectInBackground
 import vn.edu.vlu.moneymanager.data.model.TransactionType
-import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
-import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
+import vn.edu.vlu.moneymanager.sampleTransactionRepository
 import vn.edu.vlu.moneymanager.feature.category.viewmodel.CategoryUiState
 import vn.edu.vlu.moneymanager.feature.category.viewmodel.CategoryViewModel
 import vn.edu.vlu.moneymanager.sampleCategoryRepository
@@ -28,11 +27,10 @@ class CategoryViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val categoryRepository = sampleCategoryRepository()
-    private val transactionRepository = TransactionRepository()
-    private val budgetRepository = BudgetRepository()
+    private val transactionRepository = sampleTransactionRepository()
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
-    private val viewModel by lazy { CategoryViewModel(categoryRepository, transactionRepository, budgetRepository) }
+    private val viewModel by lazy { CategoryViewModel(categoryRepository, transactionRepository) }
 
     private fun TestScope.currentState(): CategoryUiState {
         collectInBackground(viewModel.uiState)
@@ -66,7 +64,7 @@ class CategoryViewModelTest {
         val state = currentState()
 
         state.items.forEach { item ->
-            val expected = transactionRepository.transactions.value.count { it.categoryId == item.category.id }
+            val expected = transactionRepository.transactions.first().count { it.categoryId == item.category.id }
             assertEquals(item.category.name, expected, item.usageCount)
         }
     }
@@ -150,23 +148,16 @@ class CategoryViewModelTest {
     }
 
     // ---- delete (what the confirm dialog promises) ----
+    // "Its transactions become Uncategorized, its budgets are removed" is done by the SQLite foreign keys
+    // (ON DELETE SET NULL / CASCADE), so it is tested on a real database in androidTest: TransactionDaoTest, BudgetDaoTest.
 
     @Test
-    fun deleteCategory_transactionsBecomeUncategorizedAndBudgetsAreRemoved() = runTest {
+    fun deleteCategory_removesItFromTheListAndTheRepository() = runTest {
         val food = categoryRepository.categories.first().first { it.name == "Food & Drinks" }
-        val foodTransactionIds = transactionRepository.transactions.value.filter { it.categoryId == food.id }.map { it.id }
-        assertTrue("sample data has Food transactions", foodTransactionIds.isNotEmpty())
-        assertTrue("sample data has a Food budget", budgetRepository.budgets.value.any { it.categoryId == food.id })
 
         viewModel.deleteCategory(food.id)
 
         assertNull(categoryRepository.get(food.id))
-        foodTransactionIds.forEach { id ->
-            val transaction = transactionRepository.get(id)!!
-            assertNull(transaction.categoryId)
-            assertTrue(transaction.pendingSync)
-        }
-        assertFalse(budgetRepository.budgets.value.any { it.categoryId == food.id })
         assertFalse(currentState().items.any { it.category.id == food.id })
     }
 
@@ -174,12 +165,11 @@ class CategoryViewModelTest {
     fun deleteCategory_leavesOtherCategoriesAlone() = runTest {
         val food = categoryRepository.categories.first().first { it.name == "Food & Drinks" }
         val transport = categoryRepository.categories.first().first { it.name == "Transport" }
-        val transportCount = transactionRepository.transactions.value.count { it.categoryId == transport.id }
+        val transportCount = transactionRepository.transactions.first().count { it.categoryId == transport.id }
 
         viewModel.deleteCategory(food.id)
 
         assertEquals(transport, categoryRepository.get(transport.id))
-        assertEquals(transportCount, transactionRepository.transactions.value.count { it.categoryId == transport.id })
-        assertTrue(budgetRepository.budgets.value.any { it.categoryId == transport.id })
+        assertEquals(transportCount, transactionRepository.transactions.first().count { it.categoryId == transport.id })
     }
 }

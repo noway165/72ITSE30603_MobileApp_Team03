@@ -27,6 +27,8 @@ object AppContainer {
     val transactionRepository by lazy { TransactionRepository() }
     val categoryRepository by lazy { CategoryRepository() }
     val budgetRepository by lazy { BudgetRepository() }
-    val currencyRepository by lazy { CurrencyRepository() }
+    val currencyRepository by lazy {
+        CurrencyRepository(database.exchangeRateDao())
+    }
     val settingsRepository by lazy { SettingsRepository() }
 }

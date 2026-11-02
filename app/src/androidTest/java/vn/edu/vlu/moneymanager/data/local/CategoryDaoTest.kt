@@ -14,6 +14,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import vn.edu.vlu.moneymanager.data.local.dao.CategoryDao
 import vn.edu.vlu.moneymanager.data.local.entity.CategoryEntity
+import vn.edu.vlu.moneymanager.data.local.entity.toModel
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.source.SampleData
 
@@ -31,7 +32,7 @@ class CategoryDaoTest {
     fun createDatabase() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         database = Room.inMemoryDatabaseBuilder(context, AppDatabase::class.java)
-            .addCallback(SeedDatabaseCallback)
+            .addCallback(SeedDatabaseCallback(databaseProvider = { database }))
             .build()
         dao = database.categoryDao()
     }

@@ -62,6 +62,16 @@ object AppContainer {
             budgetRepositoryInstance = value
         }
 
-    val currencyRepository by lazy { CurrencyRepository() }
+    private var currencyRepositoryInstance: CurrencyRepository? = null
+
+    /** Exchange-rate cache in Room; JVM unit tests set a repository over a fake DAO instead. */
+    var currencyRepository: CurrencyRepository
+        get() = currencyRepositoryInstance
+            ?: CurrencyRepository(database.exchangeRateDao()).also { currencyRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            currencyRepositoryInstance = value
+        }
+
     val settingsRepository by lazy { SettingsRepository() }
 }

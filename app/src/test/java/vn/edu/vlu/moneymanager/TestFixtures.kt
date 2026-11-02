@@ -10,6 +10,7 @@ import vn.edu.vlu.moneymanager.data.model.Transaction
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
+import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 import java.util.Calendar
@@ -28,6 +29,9 @@ fun emptyTransactionRepository(): TransactionRepository = TransactionRepository(
 
 /** Budget repository over an in-memory DAO holding the SampleData budgets (current month). */
 fun sampleBudgetRepository(): BudgetRepository = BudgetRepository(FakeBudgetDao())
+
+/** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded). */
+fun sampleCurrencyRepository(): CurrencyRepository = CurrencyRepository(FakeExchangeRateDao())
 
 /** Category repository over an in-memory DAO holding the SampleData categories. */
 fun sampleCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao())

@@ -22,12 +22,12 @@ import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.model.totalIn
 import vn.edu.vlu.moneymanager.sampleBudgetRepository
-import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
 import vn.edu.vlu.moneymanager.sampleTransactionRepository
 import vn.edu.vlu.moneymanager.feature.budget.viewmodel.BudgetEvent
 import vn.edu.vlu.moneymanager.feature.budget.viewmodel.BudgetUiState
 import vn.edu.vlu.moneymanager.feature.budget.viewmodel.BudgetViewModel
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BudgetViewModelTest {
@@ -37,7 +37,7 @@ class BudgetViewModelTest {
 
     private val budgetRepository = sampleBudgetRepository()
     private val transactionRepository = sampleTransactionRepository()
-    private val currencyRepository = CurrencyRepository()
+    private val currencyRepository = sampleCurrencyRepository()
     private val currentMonth = MonthKey.current()
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
@@ -160,7 +160,7 @@ class BudgetViewModelTest {
         val item = currentState().items.first { it.budget.categoryId == 5L }
         val expected = transactionRepository.transactions.first()
             .filter { it.categoryId == 5L && it.type == TransactionType.EXPENSE && currentMonth.contains(it.dateMillis) }
-            .totalIn("VND", currencyRepository.rates.value, TransactionType.EXPENSE).amount
+            .totalIn("VND", currencyRepository.rates.first(), TransactionType.EXPENSE).amount
         assertTrue(expected > 0)
         assertEquals(expected, item.spent, 0.001)
         assertEquals((expected * 100 / 2_000_000).toInt(), item.percent)

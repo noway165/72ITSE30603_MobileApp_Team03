@@ -24,6 +24,7 @@ import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionE
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionUiState
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionViewModel
 import vn.edu.vlu.moneymanager.sampleCategoryRepository
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 import vn.edu.vlu.moneymanager.sampleTransactionRepository
 
 /**
@@ -42,6 +43,7 @@ class AddEditTransactionViewModelTest {
     fun useInMemoryRepositories() {
         AppContainer.categoryRepository = sampleCategoryRepository()
         AppContainer.transactionRepository = repo
+        AppContainer.currencyRepository = sampleCurrencyRepository()
     }
 
     private fun TestScope.collectUiState(viewModel: AddEditTransactionViewModel) {

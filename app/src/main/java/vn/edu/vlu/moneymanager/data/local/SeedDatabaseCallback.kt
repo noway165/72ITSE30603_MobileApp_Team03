@@ -21,6 +21,7 @@ object SeedDatabaseCallback : RoomDatabase.Callback() {
         seedCategories(db)
         seedTransactions(db)
         seedBudgets(db)
+        seedExchangeRates(db)
     }
 
     private fun seedCategories(db: SupportSQLiteDatabase) {
@@ -68,6 +69,21 @@ object SeedDatabaseCallback : RoomDatabase.Callback() {
                     put("year", budget.month.year)
                     put("month", budget.month.month)
                     put("limit_amount", budget.limit)
+                }
+            )
+        }
+    }
+
+    /** updated_at = 0 means "never downloaded": the converter shows that until the user taps Refresh. */
+    private fun seedExchangeRates(db: SupportSQLiteDatabase) {
+        SampleData.exchangeRates.rates.forEach { (code, ratePerUsd) ->
+            db.insert(
+                "exchange_rates",
+                SQLiteDatabase.CONFLICT_IGNORE,
+                ContentValues().apply {
+                    put("currency_code", code)
+                    put("rate_per_usd", ratePerUsd)
+                    put("updated_at", 0L)
                 }
             )
         }

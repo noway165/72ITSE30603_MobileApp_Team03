@@ -59,27 +59,35 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
     private val currencyRepository = AppContainer.currencyRepository
 
     private val transactionId: Long = savedStateHandle[EXTRA_TRANSACTION_ID] ?: NO_ID
-    private val existing: Transaction? = transactionRepository.get(transactionId)
+    private val isEditMode = transactionId != NO_ID
 
-    private val form = MutableStateFlow(
-        existing?.let {
-            TransactionForm(
-                type = it.type,
-                amount = formatAmountForEditing(it.amount),
-                currency = it.currency,
-                categoryId = it.categoryId,
-                dateMillis = it.dateMillis,
-                note = it.note
-            )
-        } ?: TransactionForm(currency = AppContainer.settingsRepository.defaultCurrency.value)
-    )
+    private val form = MutableStateFlow(TransactionForm(currency = AppContainer.settingsRepository.defaultCurrency.value))
+
+    init {
+        // Reading Room is suspend: the form starts empty and is filled once the row is loaded.
+        // Runs only when the ViewModel is created, so it never overwrites what the user typed before a rotation.
+        if (isEditMode) {
+            viewModelScope.launch {
+                transactionRepository.get(transactionId)?.let { existing ->
+                    form.value = TransactionForm(
+                        type = existing.type,
+                        amount = formatAmountForEditing(existing.amount),
+                        currency = existing.currency,
+                        categoryId = existing.categoryId,
+                        dateMillis = existing.dateMillis,
+                        note = existing.note
+                    )
+                }
+            }
+        }
+    }
 
     private val _events = Channel<AddEditTransactionEvent>(Channel.BUFFERED)
     val events: Flow<AddEditTransactionEvent> = _events.receiveAsFlow()
 
     val uiState: StateFlow<AddEditTransactionUiState> = combine(form, categoryRepository.categories) { form, categories ->
         AddEditTransactionUiState(
-            isEditMode = existing != null,
+            isEditMode = isEditMode,
             form = form,
             categories = categories.filter { it.type == form.type },
             currencies = currencyRepository.currencies
@@ -87,7 +95,7 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
     }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
-        AddEditTransactionUiState(isEditMode = existing != null, form = form.value)
+        AddEditTransactionUiState(isEditMode = isEditMode, form = form.value)
     )
 
     fun onTypeSelected(type: TransactionType) = form.update {
@@ -113,24 +121,27 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
         form.update { it.copy(amountError = amountError, categoryError = categoryError) }
         if (amount == null || categoryError != null) return
 
-        transactionRepository.save(
-            Transaction(
-                id = existing?.id ?: 0L,
-                type = current.type,
-                amount = amount,
-                currency = current.currency,
-                categoryId = current.categoryId,
-                dateMillis = current.dateMillis,
-                note = current.note.trim(),
-                pendingSync = true
-            )
+        val transaction = Transaction(
+            id = if (isEditMode) transactionId else 0L,
+            type = current.type,
+            amount = amount,
+            currency = current.currency,
+            categoryId = current.categoryId,
+            dateMillis = current.dateMillis,
+            note = current.note.trim(),
+            pendingSync = true
         )
-        viewModelScope.launch { _events.send(AddEditTransactionEvent.Finished(R.string.transaction_saved)) }
+        viewModelScope.launch {
+            transactionRepository.save(transaction)
+            _events.send(AddEditTransactionEvent.Finished(R.string.transaction_saved))
+        }
     }
 
     fun delete() {
-        existing?.let { transactionRepository.delete(it.id) }
-        viewModelScope.launch { _events.send(AddEditTransactionEvent.Finished(R.string.transaction_deleted)) }
+        viewModelScope.launch {
+            if (isEditMode) transactionRepository.delete(transactionId)
+            _events.send(AddEditTransactionEvent.Finished(R.string.transaction_deleted))
+        }
     }
 
     private fun formatAmountForEditing(amount: Double): String =

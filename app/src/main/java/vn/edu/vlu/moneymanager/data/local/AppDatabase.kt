@@ -5,8 +5,12 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
+import vn.edu.vlu.moneymanager.data.local.dao.BudgetDao
 import vn.edu.vlu.moneymanager.data.local.dao.CategoryDao
+import vn.edu.vlu.moneymanager.data.local.dao.TransactionDao
+import vn.edu.vlu.moneymanager.data.local.entity.BudgetEntity
 import vn.edu.vlu.moneymanager.data.local.entity.CategoryEntity
+import vn.edu.vlu.moneymanager.data.local.entity.TransactionEntity
 
 /**
  * The app's only Room database (file "finance_tracker.db").
@@ -16,7 +20,7 @@ import vn.edu.vlu.moneymanager.data.local.entity.CategoryEntity
  * uninstall the app (or clear its data) after a schema change, otherwise Room refuses to open the old file.
  */
 @Database(
-    entities = [CategoryEntity::class],
+    entities = [CategoryEntity::class, TransactionEntity::class, BudgetEntity::class],
     version = 1,
     exportSchema = true
 )
@@ -24,6 +28,10 @@ import vn.edu.vlu.moneymanager.data.local.entity.CategoryEntity
 abstract class AppDatabase : RoomDatabase() {
 
     abstract fun categoryDao(): CategoryDao
+
+    abstract fun transactionDao(): TransactionDao
+
+    abstract fun budgetDao(): BudgetDao
 
     companion object {
         private const val DATABASE_NAME = "finance_tracker.db"

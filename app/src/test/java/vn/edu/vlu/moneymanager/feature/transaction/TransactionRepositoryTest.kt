@@ -1,19 +1,25 @@
 package vn.edu.vlu.moneymanager.feature.transaction
 
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNotEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeTransactionDao
 import vn.edu.vlu.moneymanager.data.model.Transaction
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 
-/** TransactionRepository is plain Kotlin: a fresh instance per test, no rule needed. */
+/**
+ * The repository gets its DAO through the constructor, so the test passes an in-memory fake (SampleData rows).
+ * The real Room DAO, foreign key included, is tested on a device in androidTest/.../TransactionDaoTest.
+ */
 class TransactionRepositoryTest {
 
-    private val repo = TransactionRepository()
+    private val repo = TransactionRepository(FakeTransactionDao())
 
     private fun newTransaction(
         categoryId: Long? = 1L,
@@ -30,8 +36,8 @@ class TransactionRepositoryTest {
     )
 
     @Test
-    fun save_newTransaction_getsNextFreeId() {
-        val maxIdBefore = repo.transactions.value.maxOf { it.id }
+    fun save_newTransaction_getsNextFreeId() = runTest {
+        val maxIdBefore = repo.transactions.first().maxOf { it.id }
 
         val saved = repo.save(newTransaction())
 
@@ -40,88 +46,79 @@ class TransactionRepositoryTest {
     }
 
     @Test
-    fun save_twoNewTransactions_getDifferentIds() {
+    fun save_twoNewTransactions_getDifferentIds() = runTest {
         val first = repo.save(newTransaction(note = "First"))
         val second = repo.save(newTransaction(note = "Second"))
 
         assertNotEquals(first.id, second.id)
-        assertEquals(2, repo.transactions.value.count { it.id == first.id || it.id == second.id })
+        assertEquals(2, repo.transactions.first().count { it.id == first.id || it.id == second.id })
     }
 
     @Test
-    fun save_keepsListSortedNewestFirst() {
-        val oldest = repo.transactions.value.minOf { it.dateMillis }
+    fun transactions_areNewestFirst() = runTest {
+        val oldest = repo.transactions.first().minOf { it.dateMillis }
         val saved = repo.save(newTransaction(dateMillis = oldest - 1))
 
-        val dates = repo.transactions.value.map { it.dateMillis }
+        val dates = repo.transactions.first().map { it.dateMillis }
         assertEquals(dates.sortedDescending(), dates)
-        assertEquals(saved.id, repo.transactions.value.last().id)
+        assertEquals(saved.id, repo.transactions.first().last().id)
     }
 
     @Test
-    fun save_existingId_replacesRowWithoutAddingOne() {
-        val original = repo.transactions.value.first()
-        val sizeBefore = repo.transactions.value.size
+    fun save_existingId_updatesRowWithoutAddingOne() = runTest {
+        val original = repo.transactions.first().first()
+        val sizeBefore = repo.transactions.first().size
 
         repo.save(original.copy(amount = 99_000.0, note = "Edited"))
 
-        assertEquals(sizeBefore, repo.transactions.value.size)
+        assertEquals(sizeBefore, repo.transactions.first().size)
         val edited = repo.get(original.id)!!
         assertEquals(99_000.0, edited.amount, 0.0)
         assertEquals("Edited", edited.note)
     }
 
     @Test
-    fun delete_existingId_removesAndReturnsIt() {
-        val target = repo.transactions.value.first()
-        val sizeBefore = repo.transactions.value.size
+    fun delete_existingId_removesAndReturnsIt() = runTest {
+        val target = repo.transactions.first().first()
+        val sizeBefore = repo.transactions.first().size
 
         val removed = repo.delete(target.id)
 
         assertEquals(target, removed)
         assertNull(repo.get(target.id))
-        assertEquals(sizeBefore - 1, repo.transactions.value.size)
+        assertEquals(sizeBefore - 1, repo.transactions.first().size)
     }
 
     @Test
-    fun delete_unknownId_returnsNullAndKeepsList() {
-        val before = repo.transactions.value
+    fun delete_unknownId_returnsNullAndKeepsList() = runTest {
+        val before = repo.transactions.first()
 
         assertNull(repo.delete(9_999L))
-        assertEquals(before, repo.transactions.value)
+        assertEquals(before, repo.transactions.first())
     }
 
     @Test
-    fun get_unknownId_returnsNull() {
+    fun restore_putsTheDeletedTransactionBackWithItsId() = runTest {
+        val target = repo.transactions.first().first()
+
+        repo.delete(target.id)
+        repo.restore(target)
+
+        assertEquals(target, repo.get(target.id))
+    }
+
+    @Test
+    fun get_unknownId_returnsNull() = runTest {
         assertNull(repo.get(9_999L))
     }
 
     @Test
-    fun clearCategory_onlyTouchesThatCategory() {
-        repo.markAllSynced()
-        val categoryId = 1L
-        val otherBefore = repo.transactions.value.filter { it.categoryId != categoryId }
-        val affectedIds = repo.transactions.value.filter { it.categoryId == categoryId }.map { it.id }
-        assertTrue(affectedIds.isNotEmpty())
-
-        repo.clearCategory(categoryId)
-
-        val after = repo.transactions.value
-        assertTrue(after.none { it.categoryId == categoryId })
-        after.filter { it.id in affectedIds }.forEach {
-            assertNull(it.categoryId)
-            assertTrue(it.pendingSync)
-        }
-        assertEquals(otherBefore, after.filter { it.id !in affectedIds })
-    }
-
-    @Test
-    fun markAllSynced_clearsEveryPendingFlag() {
+    fun markAllSynced_clearsEveryPendingFlag() = runTest {
         repo.save(newTransaction().copy(pendingSync = true))
-        assertTrue(repo.transactions.value.any { it.pendingSync })
+        assertTrue(repo.transactions.first().any { it.pendingSync })
 
         repo.markAllSynced()
 
-        assertFalse(repo.transactions.value.any { it.pendingSync })
+        assertFalse(repo.transactions.first().any { it.pendingSync })
     }
 }

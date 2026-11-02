@@ -8,7 +8,9 @@ import kotlinx.coroutines.test.UnconfinedTestDispatcher
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.Transaction
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
+import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 import java.util.Calendar
@@ -19,14 +21,22 @@ fun <T> TestScope.collectInBackground(flow: Flow<T>) {
     backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect { } }
 }
 
-/** Repositories start with SampleData; tests want a clean slate so totals are predictable. */
-fun emptyTransactionRepository(): TransactionRepository = TransactionRepository().also { repo ->
-    repo.transactions.value.forEach { repo.delete(it.id) }
-}
+/** Transaction repository over an in-memory DAO holding the SampleData transactions. */
+fun sampleTransactionRepository(): TransactionRepository = TransactionRepository(FakeTransactionDao())
 
-fun emptyCategoryRepository(): CategoryRepository = CategoryRepository().also { repo ->
-    repo.categories.value.forEach { repo.delete(it.id) }
-}
+/** No transactions at all: tests that check totals want a clean slate. */
+fun emptyTransactionRepository(): TransactionRepository = TransactionRepository(FakeTransactionDao(initial = emptyList()))
+
+/** Budget repository over an in-memory DAO holding the SampleData budgets (current month). */
+fun sampleBudgetRepository(): BudgetRepository = BudgetRepository(FakeBudgetDao())
+
+/** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded). */
+fun sampleCurrencyRepository(): CurrencyRepository = CurrencyRepository(FakeExchangeRateDao())
+
+/** Category repository over an in-memory DAO holding the SampleData categories. */
+fun sampleCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao())
+
+fun emptyCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao(initial = emptyList()))
 
 /** Default currency USD: transactions in USD convert at rate 1.0, so tests do not depend on SampleData rates. */
 fun usdSettings(): SettingsRepository = SettingsRepository().also { it.setDefaultCurrency("USD") }

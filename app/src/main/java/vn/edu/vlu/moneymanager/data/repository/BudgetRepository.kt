@@ -1,34 +1,36 @@
 package vn.edu.vlu.moneymanager.data.repository
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import vn.edu.vlu.moneymanager.data.local.dao.BudgetDao
+import vn.edu.vlu.moneymanager.data.local.entity.BudgetEntity
 import vn.edu.vlu.moneymanager.data.model.Budget
-import vn.edu.vlu.moneymanager.data.source.SampleData
 
-class BudgetRepository {
+/**
+ * Monthly budgets stored in the Room table "budgets".
+ * Deleting a category needs nothing here: its foreign key (ON DELETE CASCADE) removes the category's budgets.
+ */
+class BudgetRepository(private val budgetDao: BudgetDao) {
 
-    private val _budgets = MutableStateFlow(SampleData.budgets)
-    val budgets: StateFlow<List<Budget>> = _budgets.asStateFlow()
+    val budgets: Flow<List<Budget>> = budgetDao.observeAll().map { rows -> rows.map(BudgetEntity::toModel) }
 
-    private var nextId = (SampleData.budgets.maxOfOrNull { it.id } ?: 0L) + 1
-
-    fun save(budget: Budget): Budget {
-        val saved = if (budget.id == 0L) budget.copy(id = nextId++) else budget
-        _budgets.update { list ->
-            if (list.any { it.id == saved.id }) list.map { if (it.id == saved.id) saved else it } else list + saved
+    /** Inserts when [budget] has id 0 (Room assigns the id), otherwise updates the row with the same id. */
+    suspend fun save(budget: Budget): Budget {
+        val entity = BudgetEntity.fromModel(budget)
+        return if (budget.id == 0L) {
+            budget.copy(id = budgetDao.insert(entity))
+        } else {
+            budgetDao.update(entity)
+            budget
         }
-        return saved
     }
 
-    fun delete(id: Long): Budget? {
-        val removed = _budgets.value.firstOrNull { it.id == id } ?: return null
-        _budgets.update { list -> list.filterNot { it.id == id } }
-        return removed
+    /** Puts a deleted budget back with its old id (undo). */
+    suspend fun restore(budget: Budget) {
+        budgetDao.insert(BudgetEntity.fromModel(budget))
     }
 
-    fun deleteByCategory(categoryId: Long) {
-        _budgets.update { list -> list.filterNot { it.categoryId == categoryId } }
+    suspend fun delete(id: Long) {
+        budgetDao.deleteById(id)
     }
 }

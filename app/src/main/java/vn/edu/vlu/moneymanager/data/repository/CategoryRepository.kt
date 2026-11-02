@@ -1,30 +1,34 @@
 package vn.edu.vlu.moneymanager.data.repository
 
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import vn.edu.vlu.moneymanager.data.local.dao.CategoryDao
+import vn.edu.vlu.moneymanager.data.local.entity.CategoryEntity
 import vn.edu.vlu.moneymanager.data.model.Category
-import vn.edu.vlu.moneymanager.data.source.SampleData
 
-class CategoryRepository {
+/**
+ * Categories stored in the Room table "categories". The rest of the app only sees the [Category] model:
+ * entities stay inside the data layer.
+ */
+class CategoryRepository(private val categoryDao: CategoryDao) {
 
-    private val _categories = MutableStateFlow(SampleData.categories)
-    val categories: StateFlow<List<Category>> = _categories.asStateFlow()
+    /** Re-emits after every insert / update / delete, so all screens stay in sync. */
+    val categories: Flow<List<Category>> = categoryDao.observeAll().map { rows -> rows.map(CategoryEntity::toModel) }
 
-    private var nextId = (SampleData.categories.maxOfOrNull { it.id } ?: 0L) + 1
+    suspend fun get(id: Long?): Category? = id?.let { categoryDao.getById(it)?.toModel() }
 
-    fun get(id: Long?): Category? = id?.let { categoryId -> _categories.value.firstOrNull { it.id == categoryId } }
-
-    fun save(category: Category): Category {
-        val saved = if (category.id == 0L) category.copy(id = nextId++) else category
-        _categories.update { list ->
-            if (list.any { it.id == saved.id }) list.map { if (it.id == saved.id) saved else it } else list + saved
+    /** Inserts when [category] has id 0 (Room assigns the id), otherwise updates the row with the same id. */
+    suspend fun save(category: Category): Category {
+        val entity = CategoryEntity.fromModel(category)
+        return if (category.id == 0L) {
+            category.copy(id = categoryDao.insert(entity))
+        } else {
+            categoryDao.update(entity)
+            category
         }
-        return saved
     }
 
-    fun delete(id: Long) {
-        _categories.update { list -> list.filterNot { it.id == id } }
+    suspend fun delete(id: Long) {
+        categoryDao.deleteById(id)
     }
 }

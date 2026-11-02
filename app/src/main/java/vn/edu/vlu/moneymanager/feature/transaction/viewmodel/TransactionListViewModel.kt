@@ -101,13 +101,16 @@ class TransactionListViewModel(
     }
 
     fun delete(transactionId: Long) {
-        lastDeleted = transactionRepository.delete(transactionId) ?: return
-        viewModelScope.launch { _events.send(TransactionListEvent.ShowUndoDelete) }
+        viewModelScope.launch {
+            lastDeleted = transactionRepository.delete(transactionId) ?: return@launch
+            _events.send(TransactionListEvent.ShowUndoDelete)
+        }
     }
 
     fun undoDelete() {
-        lastDeleted?.let { transactionRepository.save(it) }
+        val deleted = lastDeleted ?: return
         lastDeleted = null
+        viewModelScope.launch { transactionRepository.restore(deleted) }
     }
 
     private fun matches(detail: TransactionDetail, filter: TransactionFilter): Boolean {

@@ -1,5 +1,8 @@
 package vn.edu.vlu.moneymanager.data
 
+import android.content.Context
+import androidx.annotation.VisibleForTesting
+import vn.edu.vlu.moneymanager.data.local.AppDatabase
 import vn.edu.vlu.moneymanager.data.repository.AuthRepository
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
@@ -12,10 +15,63 @@ import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
  * so every ViewModel sees the same data (adding a transaction updates Dashboard, Budgets and Reports).
  */
 object AppContainer {
+
+    /** Room database, opened by [init] from FinanceTrackerApp.onCreate. Repositories get their DAOs from it. */
+    lateinit var database: AppDatabase
+        private set
+
+    fun init(context: Context) {
+        database = AppDatabase.getInstance(context)
+    }
+
     val authRepository by lazy { AuthRepository() }
-    val transactionRepository by lazy { TransactionRepository() }
-    val categoryRepository by lazy { CategoryRepository() }
-    val budgetRepository by lazy { BudgetRepository() }
-    val currencyRepository by lazy { CurrencyRepository() }
+
+    private var transactionRepositoryInstance: TransactionRepository? = null
+
+    /** Created on first use from the Room DAO; JVM unit tests set a repository over a fake DAO instead. */
+    var transactionRepository: TransactionRepository
+        get() = transactionRepositoryInstance
+            ?: TransactionRepository(database.transactionDao()).also { transactionRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            transactionRepositoryInstance = value
+        }
+
+    private var categoryRepositoryInstance: CategoryRepository? = null
+
+    /**
+     * Created on first use from the Room DAO. JVM unit tests have no database, so they set this to a repository
+     * over a fake DAO before creating a ViewModel that reads it from AppContainer.
+     */
+    var categoryRepository: CategoryRepository
+        get() = categoryRepositoryInstance
+            ?: CategoryRepository(database.categoryDao()).also { categoryRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            categoryRepositoryInstance = value
+        }
+
+    private var budgetRepositoryInstance: BudgetRepository? = null
+
+    /** Created on first use from the Room DAO; JVM unit tests set a repository over a fake DAO instead. */
+    var budgetRepository: BudgetRepository
+        get() = budgetRepositoryInstance
+            ?: BudgetRepository(database.budgetDao()).also { budgetRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            budgetRepositoryInstance = value
+        }
+
+    private var currencyRepositoryInstance: CurrencyRepository? = null
+
+    /** Exchange-rate cache in Room; JVM unit tests set a repository over a fake DAO instead. */
+    var currencyRepository: CurrencyRepository
+        get() = currencyRepositoryInstance
+            ?: CurrencyRepository(database.exchangeRateDao()).also { currencyRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            currencyRepositoryInstance = value
+        }
+
     val settingsRepository by lazy { SettingsRepository() }
 }

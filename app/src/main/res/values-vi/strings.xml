@@ -122,6 +122,7 @@
     <string name="empty_categories_message">Bấm + để tạo danh mục.</string>
     <string name="confirm_delete_category">Xóa \"%s\"? Các giao dịch của danh mục sẽ thành Chưa phân loại và ngân sách của nó sẽ bị xóa.</string>
     <string name="error_name_required">Vui lòng nhập tên</string>
+    <string name="error_category_exists">Đã có danh mục cùng tên</string>
     <string name="color_red">Đỏ</string>
     <string name="color_orange">Cam</string>
     <string name="color_amber">Vàng</string>

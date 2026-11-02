@@ -1,5 +1,6 @@
 package vn.edu.vlu.moneymanager.feature.currency
 
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
@@ -12,8 +13,9 @@ import org.junit.Rule
 import org.junit.Test
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.collectInBackground
-import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.feature.currency.viewmodel.CurrencyConverterViewModel
+import vn.edu.vlu.moneymanager.data.source.SampleData
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CurrencyConverterViewModelTest {
@@ -21,8 +23,8 @@ class CurrencyConverterViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = CurrencyRepository()
-    private val codes = repository.rates.value.rates.keys.toList()
+    private val repository = sampleCurrencyRepository()
+    private val codes = SampleData.exchangeRates.rates.keys.toList()
     private val a get() = codes[0]
     private val b get() = codes[1]
 
@@ -48,7 +50,7 @@ class CurrencyConverterViewModelTest {
         viewModel.onToSelected(b)
         viewModel.onAmountChanged("250")
 
-        val expectedRate = repository.rates.value.rate(a, b)!!
+        val expectedRate = repository.rates.first().rate(a, b)!!
         val state = viewModel.uiState.value
         assertEquals(expectedRate, state.rate!!, DELTA)
         assertEquals(250 * expectedRate, state.result!!, DELTA)

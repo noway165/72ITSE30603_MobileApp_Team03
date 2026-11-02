@@ -66,9 +66,13 @@ class BudgetViewModel(
 
     private var lastDeleted: Budget? = null
 
+    // Every budget of every month, kept up to date for the synchronous duplicate check of the dialog
+    private val allBudgets: StateFlow<List<Budget>> =
+        budgetRepository.budgets.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
+
     val uiState: StateFlow<BudgetUiState> = combine(
         month,
-        budgetRepository.budgets,
+        allBudgets,
         transactionRepository.transactions,
         categoryRepository.categories,
         combine(currencyRepository.rates, settingsRepository.defaultCurrency, ::Pair)
@@ -91,11 +95,15 @@ class BudgetViewModel(
 
     fun nextMonth() = month.update { it.plusMonths(1) }
 
-    /** Creates a budget ([editingId] == null) or updates one. Returns the errors to show in the dialog. */
+    /**
+     * Creates a budget ([editingId] == null) or updates one. Returns the errors to show in the dialog.
+     * Validation is synchronous so the dialog can stay open; the Room write runs in viewModelScope.
+     */
     fun saveBudget(editingId: Long?, categoryId: Long?, limitText: String): BudgetFormErrors {
         val limit = Validators.parseAmount(limitText)
         val selectedMonth = month.value
-        val duplicate = budgetRepository.budgets.value.any {
+        // Checked here so the user gets a message; the UNIQUE (category_id, year, month) index rejects it in the database too.
+        val duplicate = allBudgets.value.any {
             it.month == selectedMonth && it.categoryId == categoryId && it.id != editingId
         }
         val errors = BudgetFormErrors(
@@ -108,17 +116,21 @@ class BudgetViewModel(
         )
         if (errors.hasErrors || categoryId == null || limit == null) return errors
 
-        budgetRepository.save(Budget(editingId ?: 0L, categoryId, selectedMonth, limit))
+        viewModelScope.launch { budgetRepository.save(Budget(editingId ?: 0L, categoryId, selectedMonth, limit)) }
         return errors
     }
 
     fun delete(budgetId: Long) {
-        lastDeleted = budgetRepository.delete(budgetId) ?: return
-        viewModelScope.launch { _events.send(BudgetEvent.ShowUndoDelete) }
+        lastDeleted = allBudgets.value.firstOrNull { it.id == budgetId } ?: return
+        viewModelScope.launch {
+            budgetRepository.delete(budgetId)
+            _events.send(BudgetEvent.ShowUndoDelete)
+        }
     }
 
     fun undoDelete() {
-        lastDeleted?.let { budgetRepository.save(it) }
+        val deleted = lastDeleted ?: return
         lastDeleted = null
+        viewModelScope.launch { budgetRepository.restore(deleted) }
     }
 }

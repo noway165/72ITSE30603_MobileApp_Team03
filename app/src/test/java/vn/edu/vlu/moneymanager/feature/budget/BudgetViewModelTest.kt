@@ -15,19 +15,19 @@ import org.junit.Rule
 import org.junit.Test
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
+import vn.edu.vlu.moneymanager.sampleCategoryRepository
 import vn.edu.vlu.moneymanager.data.model.Budget
 import vn.edu.vlu.moneymanager.data.model.BudgetProgress
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.model.totalIn
-import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
-import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
-import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
+import vn.edu.vlu.moneymanager.sampleBudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
-import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
+import vn.edu.vlu.moneymanager.sampleTransactionRepository
 import vn.edu.vlu.moneymanager.feature.budget.viewmodel.BudgetEvent
 import vn.edu.vlu.moneymanager.feature.budget.viewmodel.BudgetUiState
 import vn.edu.vlu.moneymanager.feature.budget.viewmodel.BudgetViewModel
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class BudgetViewModelTest {
@@ -35,14 +35,14 @@ class BudgetViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val budgetRepository = BudgetRepository()
-    private val transactionRepository = TransactionRepository()
-    private val currencyRepository = CurrencyRepository()
+    private val budgetRepository = sampleBudgetRepository()
+    private val transactionRepository = sampleTransactionRepository()
+    private val currencyRepository = sampleCurrencyRepository()
     private val currentMonth = MonthKey.current()
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
     private val viewModel by lazy {
-        BudgetViewModel(budgetRepository, transactionRepository, CategoryRepository(), currencyRepository, SettingsRepository())
+        BudgetViewModel(budgetRepository, transactionRepository, sampleCategoryRepository(), currencyRepository, SettingsRepository())
     }
 
     private fun TestScope.collectUiState() {
@@ -58,47 +58,47 @@ class BudgetViewModelTest {
 
     @Test
     fun saveBudget_withoutCategory_returnsCategoryRequired() = runTest {
-        val before = budgetRepository.budgets.value
+        val before = budgetRepository.budgets.first()
 
         val errors = viewModel.saveBudget(editingId = null, categoryId = null, limitText = "500000")
 
         assertEquals(R.string.error_category_required, errors.categoryError)
         assertNull(errors.limitError)
-        assertEquals(before, budgetRepository.budgets.value)
+        assertEquals(before, budgetRepository.budgets.first())
     }
 
     @Test
     fun saveBudget_categoryAlreadyHasBudgetThisMonth_returnsDuplicateError() = runTest {
-        val before = budgetRepository.budgets.value
+        val before = budgetRepository.budgets.first()
 
         // Sample data already has a budget for category 1 (Food & Drinks) this month
         val errors = viewModel.saveBudget(editingId = null, categoryId = 1L, limitText = "500000")
 
         assertEquals(R.string.error_budget_exists, errors.categoryError)
-        assertEquals(before, budgetRepository.budgets.value)
+        assertEquals(before, budgetRepository.budgets.first())
     }
 
     @Test
     fun saveBudget_limitZeroNegativeOrEmpty_returnsAmountError() = runTest {
-        val before = budgetRepository.budgets.value
+        val before = budgetRepository.budgets.first()
 
         listOf("0", "-5", "", "abc").forEach { text ->
             val errors = viewModel.saveBudget(editingId = null, categoryId = 5L, limitText = text)
             assertEquals("limit \"$text\"", R.string.error_amount_invalid, errors.limitError)
             assertNull(errors.categoryError)
         }
-        assertEquals(before, budgetRepository.budgets.value)
+        assertEquals(before, budgetRepository.budgets.first())
     }
 
     @Test
     fun saveBudget_valid_addsBudgetForShownMonth() = runTest {
-        val sizeBefore = budgetRepository.budgets.value.size
+        val sizeBefore = budgetRepository.budgets.first().size
 
         val errors = viewModel.saveBudget(editingId = null, categoryId = 5L, limitText = "1,000,000")
 
         assertFalse(errors.hasErrors)
-        assertEquals(sizeBefore + 1, budgetRepository.budgets.value.size)
-        val saved = budgetRepository.budgets.value.last()
+        assertEquals(sizeBefore + 1, budgetRepository.budgets.first().size)
+        val saved = budgetRepository.budgets.first().last()
         assertEquals(5L, saved.categoryId)
         assertEquals(currentMonth, saved.month)
         assertEquals(1_000_000.0, saved.limit, 0.0)
@@ -106,12 +106,12 @@ class BudgetViewModelTest {
 
     @Test
     fun saveBudget_editingSameBudget_isNotADuplicate() = runTest {
-        val existing = budgetRepository.budgets.value.first { it.categoryId == 1L }
+        val existing = budgetRepository.budgets.first().first { it.categoryId == 1L }
 
         val errors = viewModel.saveBudget(editingId = existing.id, categoryId = 1L, limitText = "4000000")
 
         assertFalse(errors.hasErrors)
-        assertEquals(4_000_000.0, budgetRepository.budgets.value.first { it.id == existing.id }.limit, 0.0)
+        assertEquals(4_000_000.0, budgetRepository.budgets.first().first { it.id == existing.id }.limit, 0.0)
     }
 
     @Test
@@ -123,7 +123,7 @@ class BudgetViewModelTest {
         val errors = viewModel.saveBudget(editingId = null, categoryId = 1L, limitText = "500000")
 
         assertFalse(errors.hasErrors)
-        assertEquals(currentMonth.plusMonths(-1), budgetRepository.budgets.value.last().month)
+        assertEquals(currentMonth.plusMonths(-1), budgetRepository.budgets.first().last().month)
     }
 
     // ---- percent / progress ----
@@ -145,7 +145,7 @@ class BudgetViewModelTest {
 
         val state = currentState()
         assertEquals(currentMonth, state.month)
-        assertEquals(budgetRepository.budgets.value.count { it.month == currentMonth }, state.items.size)
+        assertEquals(budgetRepository.budgets.first().count { it.month == currentMonth }, state.items.size)
         val percents = state.items.map { it.percent }
         assertEquals(percents.sortedDescending(), percents)
         assertTrue(state.expenseCategories.all { it.type == TransactionType.EXPENSE })
@@ -158,9 +158,9 @@ class BudgetViewModelTest {
         viewModel.saveBudget(editingId = null, categoryId = 5L, limitText = "2000000")
 
         val item = currentState().items.first { it.budget.categoryId == 5L }
-        val expected = transactionRepository.transactions.value
+        val expected = transactionRepository.transactions.first()
             .filter { it.categoryId == 5L && it.type == TransactionType.EXPENSE && currentMonth.contains(it.dateMillis) }
-            .totalIn("VND", currencyRepository.rates.value, TransactionType.EXPENSE).amount
+            .totalIn("VND", currencyRepository.rates.first(), TransactionType.EXPENSE).amount
         assertTrue(expected > 0)
         assertEquals(expected, item.spent, 0.001)
         assertEquals((expected * 100 / 2_000_000).toInt(), item.percent)
@@ -195,7 +195,7 @@ class BudgetViewModelTest {
     @Test
     fun delete_thenUndo_restoresBudget() = runTest {
         collectUiState()
-        val target = budgetRepository.budgets.value.first()
+        val target = budgetRepository.budgets.first().first()
 
         viewModel.delete(target.id)
 
@@ -204,7 +204,7 @@ class BudgetViewModelTest {
 
         viewModel.undoDelete()
 
-        assertTrue(budgetRepository.budgets.value.contains(target))
+        assertTrue(budgetRepository.budgets.first().contains(target))
         assertTrue(currentState().items.any { it.budget.id == target.id })
     }
 }

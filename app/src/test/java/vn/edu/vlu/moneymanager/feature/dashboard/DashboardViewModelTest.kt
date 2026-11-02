@@ -13,13 +13,13 @@ import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType.EXPENSE
 import vn.edu.vlu.moneymanager.data.model.TransactionType.INCOME
-import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.emptyCategoryRepository
 import vn.edu.vlu.moneymanager.emptyTransactionRepository
 import vn.edu.vlu.moneymanager.feature.dashboard.viewmodel.DashboardViewModel
 import vn.edu.vlu.moneymanager.midMonthMillis
 import vn.edu.vlu.moneymanager.testTransaction
 import vn.edu.vlu.moneymanager.usdSettings
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 
 class DashboardViewModelTest {
 
@@ -32,7 +32,7 @@ class DashboardViewModelTest {
     private val thisMonth = MonthKey.current()
 
     private fun createViewModel() =
-        DashboardViewModel(transactions, categories, CurrencyRepository(), settings)
+        DashboardViewModel(transactions, categories, sampleCurrencyRepository(), settings)
 
     @Test
     fun noTransactions_everythingIsZero() = runTest {

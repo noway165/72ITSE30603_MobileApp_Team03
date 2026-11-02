@@ -127,6 +127,7 @@
     <string name="empty_categories_message">Tap + to create a category.</string>
     <string name="confirm_delete_category">Delete \"%s\"? Its transactions become Uncategorized and its budgets are removed.</string>
     <string name="error_name_required">Enter a name</string>
+    <string name="error_category_exists">A category with this name already exists</string>
     <string name="color_red">Red</string>
     <string name="color_orange">Orange</string>
     <string name="color_amber">Amber</string>

@@ -15,13 +15,13 @@ import org.junit.Rule
 import org.junit.Test
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
+import vn.edu.vlu.moneymanager.sampleCategoryRepository
 import vn.edu.vlu.moneymanager.data.model.Budget
 import vn.edu.vlu.moneymanager.data.model.BudgetProgress
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.model.totalIn
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
-import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
@@ -42,7 +42,7 @@ class BudgetViewModelTest {
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
     private val viewModel by lazy {
-        BudgetViewModel(budgetRepository, transactionRepository, CategoryRepository(), currencyRepository, SettingsRepository())
+        BudgetViewModel(budgetRepository, transactionRepository, sampleCategoryRepository(), currencyRepository, SettingsRepository())
     }
 
     private fun TestScope.collectUiState() {

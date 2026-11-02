@@ -24,9 +24,10 @@ fun emptyTransactionRepository(): TransactionRepository = TransactionRepository(
     repo.transactions.value.forEach { repo.delete(it.id) }
 }
 
-fun emptyCategoryRepository(): CategoryRepository = CategoryRepository().also { repo ->
-    repo.categories.value.forEach { repo.delete(it.id) }
-}
+/** Category repository over an in-memory DAO holding the SampleData categories. */
+fun sampleCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao())
+
+fun emptyCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao(initial = emptyList()))
 
 /** Default currency USD: transactions in USD convert at rate 1.0, so tests do not depend on SampleData rates. */
 fun usdSettings(): SettingsRepository = SettingsRepository().also { it.setDefaultCurrency("USD") }

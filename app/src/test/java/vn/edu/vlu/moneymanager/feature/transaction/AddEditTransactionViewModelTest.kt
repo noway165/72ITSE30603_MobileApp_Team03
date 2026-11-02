@@ -12,6 +12,7 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 import vn.edu.vlu.moneymanager.MainDispatcherRule
@@ -22,6 +23,7 @@ import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionEvent
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionUiState
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionViewModel
+import vn.edu.vlu.moneymanager.sampleCategoryRepository
 
 /**
  * AddEditTransactionViewModel takes its repositories from AppContainer (shared by every test),
@@ -34,6 +36,12 @@ class AddEditTransactionViewModelTest {
     val mainDispatcherRule = MainDispatcherRule()
 
     private val repo = AppContainer.transactionRepository
+
+    /** Categories now come from Room; unit tests have no database, so AppContainer gets an in-memory one. */
+    @Before
+    fun useInMemoryCategories() {
+        AppContainer.categoryRepository = sampleCategoryRepository()
+    }
 
     private fun TestScope.collectUiState(viewModel: AddEditTransactionViewModel) {
         backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { viewModel.uiState.collect {} }

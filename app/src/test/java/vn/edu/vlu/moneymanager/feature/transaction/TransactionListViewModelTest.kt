@@ -15,13 +15,13 @@ import org.junit.Rule
 import org.junit.Test
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.data.model.TransactionType
-import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.TransactionListEvent
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.TransactionListUiState
 import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.TransactionListViewModel
+import vn.edu.vlu.moneymanager.sampleCategoryRepository
 import vn.edu.vlu.moneymanager.util.DateUtils
 import java.util.Calendar
 
@@ -34,7 +34,7 @@ class TransactionListViewModelTest {
     private val transactionRepository = TransactionRepository()
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
     private val viewModel by lazy {
-        TransactionListViewModel(transactionRepository, CategoryRepository(), CurrencyRepository(), SettingsRepository())
+        TransactionListViewModel(transactionRepository, sampleCategoryRepository(), CurrencyRepository(), SettingsRepository())
     }
 
     /** uiState uses WhileSubscribed: it only updates while something collects it. */

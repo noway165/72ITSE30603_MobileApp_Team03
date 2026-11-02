@@ -1,6 +1,7 @@
 package vn.edu.vlu.moneymanager.data
 
 import android.content.Context
+import androidx.annotation.VisibleForTesting
 import vn.edu.vlu.moneymanager.data.local.AppDatabase
 import vn.edu.vlu.moneymanager.data.repository.AuthRepository
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
@@ -25,7 +26,21 @@ object AppContainer {
 
     val authRepository by lazy { AuthRepository() }
     val transactionRepository by lazy { TransactionRepository() }
-    val categoryRepository by lazy { CategoryRepository() }
+
+    private var categoryRepositoryInstance: CategoryRepository? = null
+
+    /**
+     * Created on first use from the Room DAO. JVM unit tests have no database, so they set this to a repository
+     * over a fake DAO before creating a ViewModel that reads it from AppContainer.
+     */
+    var categoryRepository: CategoryRepository
+        get() = categoryRepositoryInstance
+            ?: CategoryRepository(database.categoryDao()).also { categoryRepositoryInstance = it }
+        @VisibleForTesting
+        set(value) {
+            categoryRepositoryInstance = value
+        }
+
     val budgetRepository by lazy { BudgetRepository() }
     val currencyRepository by lazy { CurrencyRepository() }
     val settingsRepository by lazy { SettingsRepository() }

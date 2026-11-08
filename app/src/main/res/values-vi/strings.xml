@@ -177,4 +177,13 @@
     <string name="auth_demo_mode_with_account">Chế độ demo: chưa cấu hình Firebase nên tài khoản chỉ được lưu trên máy này.\nTài khoản dùng thử: %1$s / %2$s</string>
     <string name="sync_done">Đã đồng bộ tất cả thay đổi</string>
     <string name="category_deleted">Đã xóa danh mục</string>
+
+    <!-- Network errors (Milestone 4) -->
+    <string name="action_retry">Thử lại</string>
+    <string name="error_network_offline">Không có kết nối mạng.</string>
+    <string name="error_network_timeout">Máy chủ phản hồi quá lâu.</string>
+    <string name="error_http_bad_request">Yêu cầu không hợp lệ.</string>
+    <string name="error_http_not_found">Không tìm thấy dữ liệu trên máy chủ.</string>
+    <string name="error_http_server">Máy chủ đang gặp sự cố. Vui lòng thử lại sau.</string>
+    <string name="error_network_unknown">Đã có lỗi xảy ra. Vui lòng thử lại.</string>
 </resources>

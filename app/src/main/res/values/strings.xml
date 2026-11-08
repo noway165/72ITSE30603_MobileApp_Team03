@@ -183,4 +183,13 @@
     <string name="sync_done">All changes are synced</string>
     <string name="category_deleted">Category deleted</string>
     <string name="percent_value" translatable="false">%d%%</string>
+
+    <!-- Network errors (Milestone 4) -->
+    <string name="action_retry">Retry</string>
+    <string name="error_network_offline">No internet connection.</string>
+    <string name="error_network_timeout">The server took too long to respond.</string>
+    <string name="error_http_bad_request">The request was not valid.</string>
+    <string name="error_http_not_found">The data was not found on the server.</string>
+    <string name="error_http_server">The server is having problems. Try again later.</string>
+    <string name="error_network_unknown">Something went wrong. Try again.</string>
 </resources>

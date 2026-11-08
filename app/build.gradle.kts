@@ -1,7 +1,16 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.ksp)
+    alias(libs.plugins.google.services)
 }
+
+// URLs and API keys stay in local.properties (not in git) and reach the code through BuildConfig
+val localProperties = Properties().apply {
+    rootProject.file("local.properties").takeIf { it.exists() }?.inputStream()?.use { load(it) }
+}
+fun localProperty(name: String) = "\"${localProperties.getProperty(name, "")}\""
 
 android {
     namespace = "vn.edu.vlu.moneymanager"
@@ -17,6 +26,10 @@ android {
         versionName = "0.2.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        buildConfigField("String", "MOCKAPI_CATEGORIES_URL", localProperty("MOCKAPI_CATEGORIES_URL"))
+        buildConfigField("String", "MOCKAPI_FINANCE_URL", localProperty("MOCKAPI_FINANCE_URL"))
+        buildConfigField("String", "EXCHANGE_RATE_API_KEY", localProperty("EXCHANGE_RATE_API_KEY"))
     }
 
     buildTypes {
@@ -54,6 +67,13 @@ dependencies {
     implementation(libs.androidx.recyclerview)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
+    implementation(libs.retrofit)
+    implementation(libs.retrofit.converter.gson)
+    implementation(libs.coil)
+    implementation(libs.coil.network.okhttp)
+    implementation(platform(libs.firebase.bom))
+    implementation(libs.firebase.auth)
+    implementation(libs.kotlinx.coroutines.play.services)
     ksp(libs.androidx.room.compiler)
     implementation(libs.material)
     implementation(libs.mpandroidchart)

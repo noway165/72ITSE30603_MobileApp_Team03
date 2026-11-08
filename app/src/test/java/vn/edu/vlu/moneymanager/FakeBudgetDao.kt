@@ -38,4 +38,15 @@ class FakeBudgetDao(
     override suspend fun deleteById(id: Long) {
         rows.update { list -> list.filterNot { it.id == id } }
     }
+
+    override suspend fun deleteExcept(ids: List<Long>) {
+        rows.update { list -> list.filter { it.id in ids } }
+    }
+
+    override suspend fun upsertAll(budgets: List<BudgetEntity>) {
+        val ids = budgets.map { it.id }
+        rows.update { list -> list.filterNot { it.id in ids } + budgets }
+    }
+
+    override suspend fun categoryIds(): List<Long> = SampleData.categories.map { it.id }
 }

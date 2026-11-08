@@ -32,6 +32,8 @@ class BudgetDaoTest {
             .addCallback(SeedDatabaseCallback)
             .build()
         dao = database.budgetDao()
+        // Budgets are no longer seeded (they come from MockAPI): insert the sample rows the tests build on
+        runBlocking { SampleData.budgets.forEach { dao.insert(BudgetEntity.fromModel(it)) } }
     }
 
     @After
@@ -40,7 +42,7 @@ class BudgetDaoTest {
     }
 
     @Test
-    fun newDatabase_isSeededWithSampleBudgets() = runBlocking {
+    fun sampleBudgets_areReadBack() = runBlocking {
         val budgets = dao.observeAll().first().map { it.toModel() }
 
         assertEquals(SampleData.budgets, budgets)
@@ -95,6 +97,15 @@ class BudgetDaoTest {
 
         assertTrue(dao.observeAll().first().none { it.categoryId == 1L })
         assertEquals(otherBefore, dao.observeAll().first())
+    }
+
+    @Test
+    fun replaceAll_makesTheTableEqualToTheServerList() = runBlocking {
+        val server = BudgetEntity(id = 77L, categoryId = 2L, year = month.year, month = month.month, limitAmount = 5.0)
+
+        dao.replaceAll(listOf(server))
+
+        assertEquals(listOf(server), dao.observeAll().first())
     }
 
     @Test(expected = SQLiteConstraintException::class)

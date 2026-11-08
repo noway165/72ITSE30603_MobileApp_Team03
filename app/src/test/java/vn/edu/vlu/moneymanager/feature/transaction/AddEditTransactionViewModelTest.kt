@@ -15,6 +15,7 @@ import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeTransactionApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.data.AppContainer
@@ -26,6 +27,8 @@ import vn.edu.vlu.moneymanager.feature.transaction.viewmodel.AddEditTransactionV
 import vn.edu.vlu.moneymanager.sampleCategoryRepository
 import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 import vn.edu.vlu.moneymanager.sampleTransactionRepository
+import vn.edu.vlu.moneymanager.saved
+import java.io.IOException
 
 /**
  * AddEditTransactionViewModel takes its repositories from AppContainer, so each test puts fresh
@@ -37,7 +40,8 @@ class AddEditTransactionViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repo = sampleTransactionRepository()
+    private val api = FakeTransactionApi()
+    private val repo = sampleTransactionRepository(api)
 
     @Before
     fun useInMemoryRepositories() {
@@ -160,7 +164,23 @@ class AddEditTransactionViewModelTest {
         assertEquals(1L, saved.categoryId)
         assertEquals("Lunch", saved.note)
         assertEquals(TransactionType.EXPENSE, saved.type)
-        assertTrue(saved.pendingSync)
+        assertFalse(saved.pendingSync)
+    }
+
+    @Test
+    fun save_offline_keepsItAsPendingAndSaysSo() = runTest {
+        api.failure = IOException("Airplane Mode")
+        val viewModel = AddEditTransactionViewModel(SavedStateHandle())
+        collectUiState(viewModel)
+
+        viewModel.onAmountChanged("20000")
+        viewModel.onCategorySelected(1L)
+        viewModel.onNoteChanged("Offline coffee")
+        viewModel.save()
+
+        assertEquals(AddEditTransactionEvent.Finished(R.string.transaction_saved_offline), viewModel.events.first())
+        assertTrue(repo.transactions.first().first { it.note == "Offline coffee" }.pendingSync)
+        assertFalse(currentState(viewModel).isSaving)
     }
 
     @Test
@@ -189,7 +209,7 @@ class AddEditTransactionViewModelTest {
 
     @Test
     fun delete_inEditMode_removesTransactionAndFinishes() = runTest {
-        val created = repo.save(
+        val created = repo.saved(
             Transaction(0L, TransactionType.EXPENSE, 10_000.0, "VND", 2L, System.currentTimeMillis(), "To delete")
         )
         val viewModel = AddEditTransactionViewModel(
@@ -200,5 +220,18 @@ class AddEditTransactionViewModelTest {
 
         assertEquals(AddEditTransactionEvent.Finished(R.string.transaction_deleted), viewModel.events.first())
         assertNull(repo.get(created.id))
+    }
+
+    @Test
+    fun delete_offline_showsErrorAndKeepsTheTransaction() = runTest {
+        val viewModel = AddEditTransactionViewModel(
+            SavedStateHandle(mapOf(AddEditTransactionViewModel.EXTRA_TRANSACTION_ID to 1L))
+        )
+        api.failure = IOException("Airplane Mode")
+
+        viewModel.delete()
+
+        assertEquals(AddEditTransactionEvent.ShowError(R.string.error_network_offline), viewModel.events.first())
+        assertTrue(repo.get(1L) != null)
     }
 }

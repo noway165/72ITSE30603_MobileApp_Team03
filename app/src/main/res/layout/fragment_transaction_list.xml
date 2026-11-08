@@ -123,7 +123,18 @@
         app:layout_constraintTop_toBottomOf="@id/flowFilters"
         tools:text="24 transactions · Net -1.250.000 ₫" />
 
-    <!-- 0dp x 0dp = fills the space between the summary and the bottom edge -->
+    <!-- Network error banner (offline / server error) with Retry; gone when the last call worked -->
+    <include
+        android:id="@+id/errorBanner"
+        layout="@layout/layout_error_banner"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="@dimen/space_xs"
+        app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
+        app:layout_constraintStart_toStartOf="@id/guidelineStart"
+        app:layout_constraintTop_toBottomOf="@id/tvResultSummary" />
+
+    <!-- 0dp x 0dp = fills the space between the banner and the bottom edge -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/rvTransactions"
         android:layout_width="0dp"
@@ -136,7 +147,7 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvResultSummary"
+        app:layout_constraintTop_toBottomOf="@id/errorBanner"
         tools:itemCount="8"
         tools:listitem="@layout/item_transaction" />
 
@@ -149,8 +160,19 @@
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/tvResultSummary"
+        app:layout_constraintTop_toBottomOf="@id/errorBanner"
         app:layout_constraintVertical_bias="0.4" />
+
+    <!-- Shown while a MockAPI call runs (download, delete, undo) -->
+    <com.google.android.material.progressindicator.LinearProgressIndicator
+        android:id="@+id/progressTransactions"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:indeterminate="true"
+        android:visibility="gone"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddTransaction"

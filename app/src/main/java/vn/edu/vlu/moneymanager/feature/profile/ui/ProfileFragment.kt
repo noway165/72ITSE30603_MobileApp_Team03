@@ -96,6 +96,9 @@ class ProfileFragment : Fragment() {
     private fun handleEvent(event: ProfileEvent) {
         when (event) {
             ProfileEvent.SyncDone -> Snackbar.make(binding.root, R.string.sync_done, Snackbar.LENGTH_SHORT).show()
+            is ProfileEvent.SyncFailed -> Snackbar.make(binding.root, event.messageRes, Snackbar.LENGTH_LONG)
+                .setAction(R.string.action_retry) { viewModel.syncNow() }
+                .show()
             ProfileEvent.SignedOut -> {
                 startActivity(
                     Intent(requireContext(), LoginActivity::class.java)

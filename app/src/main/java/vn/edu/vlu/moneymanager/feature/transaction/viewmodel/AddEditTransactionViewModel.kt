@@ -19,6 +19,7 @@ import vn.edu.vlu.moneymanager.data.AppContainer
 import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.Transaction
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.util.DateUtils
 import vn.edu.vlu.moneymanager.util.Validators
 
@@ -39,13 +40,17 @@ data class AddEditTransactionUiState(
     val form: TransactionForm = TransactionForm(),
     /** Categories of the selected type, for the category dropdown */
     val categories: List<Category> = emptyList(),
-    val currencies: List<String> = emptyList()
+    val currencies: List<String> = emptyList(),
+    /** A save or delete is waiting for the server: the buttons are disabled meanwhile */
+    val isSaving: Boolean = false
 ) {
     val selectedCategory: Category? get() = categories.firstOrNull { it.id == form.categoryId }
 }
 
 sealed interface AddEditTransactionEvent {
     data class Finished(@param:StringRes val messageRes: Int) : AddEditTransactionEvent
+    /** The server refused the change (or deleting without a network): the form stays open */
+    data class ShowError(@param:StringRes val messageRes: Int) : AddEditTransactionEvent
 }
 
 /**
@@ -58,15 +63,18 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
     private val categoryRepository = AppContainer.categoryRepository
     private val currencyRepository = AppContainer.currencyRepository
 
-    private val transactionId: Long = savedStateHandle[EXTRA_TRANSACTION_ID] ?: NO_ID
-    private val isEditMode = transactionId != NO_ID
+    // No extra = add mode. Ids can be negative (rows created offline), so no id value can mean "none".
+    private val transactionId: Long? = savedStateHandle[EXTRA_TRANSACTION_ID]
+    private val isEditMode = transactionId != null
+
+    private val isSaving = MutableStateFlow(false)
 
     private val form = MutableStateFlow(TransactionForm(currency = AppContainer.settingsRepository.defaultCurrency.value))
 
     init {
         // Reading Room is suspend: the form starts empty and is filled once the row is loaded.
         // Runs only when the ViewModel is created, so it never overwrites what the user typed before a rotation.
-        if (isEditMode) {
+        if (transactionId != null) {
             viewModelScope.launch {
                 transactionRepository.get(transactionId)?.let { existing ->
                     form.value = TransactionForm(
@@ -85,14 +93,16 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
     private val _events = Channel<AddEditTransactionEvent>(Channel.BUFFERED)
     val events: Flow<AddEditTransactionEvent> = _events.receiveAsFlow()
 
-    val uiState: StateFlow<AddEditTransactionUiState> = combine(form, categoryRepository.categories) { form, categories ->
-        AddEditTransactionUiState(
-            isEditMode = isEditMode,
-            form = form,
-            categories = categories.filter { it.type == form.type },
-            currencies = currencyRepository.currencies
-        )
-    }.stateIn(
+    val uiState: StateFlow<AddEditTransactionUiState> =
+        combine(form, categoryRepository.categories, isSaving) { form, categories, saving ->
+            AddEditTransactionUiState(
+                isEditMode = isEditMode,
+                form = form,
+                categories = categories.filter { it.type == form.type },
+                currencies = currencyRepository.currencies,
+                isSaving = saving
+            )
+        }.stateIn(
         viewModelScope,
         SharingStarted.WhileSubscribed(5_000),
         AddEditTransactionUiState(isEditMode = isEditMode, form = form.value)
@@ -122,25 +132,36 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
         if (amount == null || categoryError != null) return
 
         val transaction = Transaction(
-            id = if (isEditMode) transactionId else 0L,
+            id = transactionId ?: 0L,
             type = current.type,
             amount = amount,
             currency = current.currency,
             categoryId = current.categoryId,
             dateMillis = current.dateMillis,
-            note = current.note.trim(),
-            pendingSync = true
+            note = current.note.trim()
         )
-        viewModelScope.launch {
-            transactionRepository.save(transaction)
-            _events.send(AddEditTransactionEvent.Finished(R.string.transaction_saved))
+        runCall({ transactionRepository.save(transaction) }) { saved ->
+            if (saved.pendingSync) R.string.transaction_saved_offline else R.string.transaction_saved
         }
     }
 
     fun delete() {
+        val id = transactionId ?: return
+        runCall({ transactionRepository.delete(id) }) { R.string.transaction_deleted }
+    }
+
+    /** Loading while [call] runs; Success closes the screen with [successMessage], Error keeps the form open. */
+    private fun <T> runCall(call: suspend () -> UiState<T>, successMessage: (T) -> Int) {
+        if (isSaving.value) return
         viewModelScope.launch {
-            if (isEditMode) transactionRepository.delete(transactionId)
-            _events.send(AddEditTransactionEvent.Finished(R.string.transaction_deleted))
+            isSaving.value = true
+            val event = when (val result = call()) {
+                is UiState.Success -> AddEditTransactionEvent.Finished(successMessage(result.data))
+                is UiState.Error -> AddEditTransactionEvent.ShowError(result.messageRes)
+                UiState.Loading -> null
+            }
+            isSaving.value = false
+            event?.let { _events.send(it) }
         }
     }
 
@@ -149,6 +170,5 @@ class AddEditTransactionViewModel(savedStateHandle: SavedStateHandle) : ViewMode
 
     companion object {
         const val EXTRA_TRANSACTION_ID = "transaction_id"
-        private const val NO_ID = -1L
     }
 }

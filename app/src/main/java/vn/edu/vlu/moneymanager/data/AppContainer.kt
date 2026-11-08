@@ -5,6 +5,7 @@ import androidx.annotation.VisibleForTesting
 import vn.edu.vlu.moneymanager.BuildConfig
 import vn.edu.vlu.moneymanager.data.local.AppDatabase
 import vn.edu.vlu.moneymanager.data.remote.ApiClient
+import vn.edu.vlu.moneymanager.data.remote.NetworkMonitor
 import vn.edu.vlu.moneymanager.data.repository.AuthRepository
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
@@ -25,16 +26,24 @@ object AppContainer {
 
     fun init(context: Context) {
         database = AppDatabase.getInstance(context)
+        NetworkMonitor.start(context)
     }
 
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
 
     private var transactionRepositoryInstance: TransactionRepository? = null
 
-    /** Created on first use from the Room DAO; JVM unit tests set a repository over a fake DAO instead. */
+    /**
+     * Created on first use from the Room DAO; JVM unit tests set a repository over fakes instead.
+     * Transactions and budgets share one MockAPI project (the free plan allows 2 resources per project).
+     */
     var transactionRepository: TransactionRepository
         get() = transactionRepositoryInstance
-            ?: TransactionRepository(database.transactionDao()).also { transactionRepositoryInstance = it }
+            ?: TransactionRepository(
+                database.transactionDao(),
+                ApiClient.create(BuildConfig.MOCKAPI_FINANCE_URL),
+                userId = { authRepository.currentUser.value?.uid }
+            ).also { transactionRepositoryInstance = it }
         @VisibleForTesting
         set(value) {
             transactionRepositoryInstance = value
@@ -60,10 +69,14 @@ object AppContainer {
 
     private var budgetRepositoryInstance: BudgetRepository? = null
 
-    /** Created on first use from the Room DAO; JVM unit tests set a repository over a fake DAO instead. */
+    /** Created on first use from the Room DAO; JVM unit tests set a repository over fakes instead. */
     var budgetRepository: BudgetRepository
         get() = budgetRepositoryInstance
-            ?: BudgetRepository(database.budgetDao()).also { budgetRepositoryInstance = it }
+            ?: BudgetRepository(
+                database.budgetDao(),
+                ApiClient.create(BuildConfig.MOCKAPI_FINANCE_URL),
+                userId = { authRepository.currentUser.value?.uid }
+            ).also { budgetRepositoryInstance = it }
         @VisibleForTesting
         set(value) {
             budgetRepositoryInstance = value

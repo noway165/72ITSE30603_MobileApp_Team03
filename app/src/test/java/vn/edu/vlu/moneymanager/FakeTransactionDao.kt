@@ -40,7 +40,18 @@ class FakeTransactionDao(
         rows.update { list -> list.filterNot { it.id == id } }
     }
 
-    override suspend fun markAllSynced() {
-        rows.update { list -> list.map { it.copy(pendingSync = false) } }
+    override suspend fun upsertAll(transactions: List<TransactionEntity>) {
+        val ids = transactions.map { it.id }
+        rows.update { list -> list.filterNot { it.id in ids } + transactions }
+    }
+
+    override suspend fun getPending(): List<TransactionEntity> = rows.value.filter { it.pendingSync }
+
+    override suspend fun minId(): Long? = rows.value.minOfOrNull { it.id }
+
+    override suspend fun categoryIds(): List<Long> = SampleData.categories.map { it.id }
+
+    override suspend fun deleteSyncedExcept(ids: List<Long>) {
+        rows.update { list -> list.filter { it.pendingSync || it.id in ids } }
     }
 }

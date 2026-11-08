@@ -7,6 +7,7 @@ import vn.edu.vlu.moneymanager.data.repository.AuthRepository
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
+import vn.edu.vlu.moneymanager.data.repository.FirebaseAuthRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 
@@ -24,7 +25,7 @@ object AppContainer {
         database = AppDatabase.getInstance(context)
     }
 
-    val authRepository by lazy { AuthRepository() }
+    val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
 
     private var transactionRepositoryInstance: TransactionRepository? = null
 

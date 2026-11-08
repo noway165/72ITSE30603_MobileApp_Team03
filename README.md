@@ -15,7 +15,7 @@
 - ViewModel expose `StateFlow`; Fragment collect bằng `viewLifecycleOwner` + `repeatOnLifecycle(STARTED)`; `_binding = null` trong `onDestroyView()`
 - Chi tiết và checklist yêu cầu: [docs/MVVM_ARCHITECTURE.md](docs/MVVM_ARCHITECTURE.md)
 
-App chạy được trên máy ảo: màn đầu tiên là đăng nhập, tài khoản demo `demo@vlu.edu.vn` / `demo1234`.
+App chạy được trên máy ảo: màn đầu tiên là đăng nhập, tạo tài khoản mới bằng nút Register (Firebase Email/Password).
 
 ## Milestone 3 – Lưu dữ liệu offline với Room
 
@@ -35,7 +35,7 @@ App chạy được trên máy ảo: màn đầu tiên là đăng nhập, tài k
 - **Pull Request:** [#8 `feature/room-database` → `main`](https://github.com/noway165/72ITSE30603_MobileApp_Team03/pull/8) (gộp PR #6 danh mục, PR #7 giao dịch & ngân sách, nhánh tỷ giá)
 - **Kiểm thử:** `gradlew :app:testDebugUnitTest` (117 unit test, DAO giả trong bộ nhớ) và `gradlew :app:connectedDebugAndroidTest` khi máy ảo đang bật (22 test DAO trên SQLite thật).
 
-Tài khoản đăng nhập và cài đặt (tiền tệ mặc định, dark mode) vẫn lưu trong bộ nhớ. Sau khi đổi schema database, gỡ app khỏi máy ảo rồi mới chạy lại.
+Cài đặt (tiền tệ mặc định, dark mode) vẫn lưu trong bộ nhớ. Sau khi đổi schema database, gỡ app khỏi máy ảo rồi mới chạy lại.
 
 ## Mở project
 

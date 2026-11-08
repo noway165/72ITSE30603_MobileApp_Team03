@@ -62,7 +62,6 @@
     <string name="error_password_required">Enter your password</string>
     <string name="error_password_rule">Use at least 8 characters with letters and numbers</string>
     <string name="error_password_mismatch">Passwords do not match</string>
-    <string name="auth_demo_mode_note">Demo mode: Firebase is not configured yet, so accounts are stored only on this device.</string>
 
     <!-- Dashboard -->
     <string name="dashboard_total_balance">Total balance</string>
@@ -179,7 +178,6 @@
     <!-- Added in Milestone 2 (MVVM) -->
     <string name="error_sign_in_failed">Incorrect email or password</string>
     <string name="error_email_taken">An account with this email already exists</string>
-    <string name="auth_demo_mode_with_account">Demo mode: Firebase is not configured yet, so accounts are stored only on this device.\nDemo account: %1$s / %2$s</string>
     <string name="sync_done">All changes are synced</string>
     <string name="category_deleted">Category deleted</string>
     <string name="percent_value" translatable="false">%d%%</string>

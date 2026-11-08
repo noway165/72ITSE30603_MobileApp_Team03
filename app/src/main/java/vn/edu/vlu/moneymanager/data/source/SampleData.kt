@@ -16,8 +16,6 @@ import java.util.Calendar
  */
 object SampleData {
 
-    const val DEMO_EMAIL = "demo@vlu.edu.vn"
-    const val DEMO_PASSWORD = "demo1234"
     const val DEFAULT_CURRENCY = "VND"
 
     val currencies = listOf("VND", "USD", "EUR", "JPY", "KRW", "GBP")

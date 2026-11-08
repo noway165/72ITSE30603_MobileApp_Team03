@@ -1,13 +1,16 @@
 package vn.edu.vlu.moneymanager
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.Transaction
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
@@ -33,10 +36,15 @@ fun sampleBudgetRepository(): BudgetRepository = BudgetRepository(FakeBudgetDao(
 /** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded). */
 fun sampleCurrencyRepository(): CurrencyRepository = CurrencyRepository(FakeExchangeRateDao())
 
-/** Category repository over an in-memory DAO holding the SampleData categories. */
-fun sampleCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao())
+/** Category repository over in-memory fakes holding the SampleData categories; runs inline, no real IO thread. */
+fun sampleCategoryRepository(api: FakeCategoryApi = FakeCategoryApi()): CategoryRepository =
+    CategoryRepository(FakeCategoryDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
-fun emptyCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao(initial = emptyList()))
+/** For tests that only need a category to exist: save() on the fakes cannot fail. */
+suspend fun CategoryRepository.saved(category: Category): Category = (save(category) as UiState.Success).data
+
+fun emptyCategoryRepository(): CategoryRepository =
+    CategoryRepository(FakeCategoryDao(initial = emptyList()), FakeCategoryApi(), { TEST_USER_ID }, Dispatchers.Unconfined)
 
 /** Default currency USD: transactions in USD convert at rate 1.0, so tests do not depend on SampleData rates. */
 fun usdSettings(): SettingsRepository = SettingsRepository().also { it.setDefaultCurrency("USD") }

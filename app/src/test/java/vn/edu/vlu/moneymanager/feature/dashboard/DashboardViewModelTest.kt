@@ -20,6 +20,7 @@ import vn.edu.vlu.moneymanager.midMonthMillis
 import vn.edu.vlu.moneymanager.testTransaction
 import vn.edu.vlu.moneymanager.usdSettings
 import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import vn.edu.vlu.moneymanager.saved
 
 class DashboardViewModelTest {
 
@@ -77,7 +78,7 @@ class DashboardViewModelTest {
 
     @Test
     fun recent_joinsCategory_andUncategorizedHasNull() = runTest {
-        val food = categories.save(Category(0, "Food", EXPENSE, "#FF0000"))
+        val food = categories.saved(Category(0, "Food", EXPENSE, "#FF0000"))
         transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 2), categoryId = food.id))
         transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 1)))
         val viewModel = createViewModel()

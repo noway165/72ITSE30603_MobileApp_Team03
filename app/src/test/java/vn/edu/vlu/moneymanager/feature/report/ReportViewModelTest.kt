@@ -18,6 +18,7 @@ import vn.edu.vlu.moneymanager.midMonthMillis
 import vn.edu.vlu.moneymanager.testTransaction
 import vn.edu.vlu.moneymanager.usdSettings
 import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import vn.edu.vlu.moneymanager.saved
 
 class ReportViewModelTest {
 
@@ -73,9 +74,9 @@ class ReportViewModelTest {
 
     @Test
     fun slices_groupExpensesByCategory_sortedDescending_withoutZeroOrIncome() = runTest {
-        val food = categories.save(Category(0, "Food", EXPENSE, "#FF0000"))
-        val rent = categories.save(Category(0, "Rent", EXPENSE, "#00FF00"))
-        val unused = categories.save(Category(0, "Unused", EXPENSE, "#0000FF"))
+        val food = categories.saved(Category(0, "Food", EXPENSE, "#FF0000"))
+        val rent = categories.saved(Category(0, "Rent", EXPENSE, "#00FF00"))
+        val unused = categories.saved(Category(0, "Unused", EXPENSE, "#0000FF"))
         val at = midMonthMillis(thisMonth)
         transactions.save(testTransaction(EXPENSE, 100.0, at, categoryId = food.id))
         transactions.save(testTransaction(EXPENSE, 50.0, at, categoryId = food.id))

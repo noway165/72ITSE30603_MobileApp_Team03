@@ -2,6 +2,7 @@ package vn.edu.vlu.moneymanager.data.remote
 
 import androidx.annotation.StringRes
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import retrofit2.HttpException
@@ -20,7 +21,10 @@ sealed interface UiState<out T> {
  * Runs a network call on Dispatchers.IO and turns any failure into [UiState.Error], so a timeout,
  * Airplane Mode, an HTTP error or bad JSON shows a banner instead of crashing the app.
  */
-suspend fun <T> apiCall(block: suspend () -> T): UiState<T> = withContext(Dispatchers.IO) {
+suspend fun <T> apiCall(
+    dispatcher: CoroutineDispatcher = Dispatchers.IO,
+    block: suspend () -> T
+): UiState<T> = withContext(dispatcher) {
     try {
         UiState.Success(block())
     } catch (e: CancellationException) {

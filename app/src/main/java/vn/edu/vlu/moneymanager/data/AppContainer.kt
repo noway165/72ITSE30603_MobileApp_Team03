@@ -2,7 +2,9 @@ package vn.edu.vlu.moneymanager.data
 
 import android.content.Context
 import androidx.annotation.VisibleForTesting
+import vn.edu.vlu.moneymanager.BuildConfig
 import vn.edu.vlu.moneymanager.data.local.AppDatabase
+import vn.edu.vlu.moneymanager.data.remote.ApiClient
 import vn.edu.vlu.moneymanager.data.repository.AuthRepository
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
@@ -46,7 +48,11 @@ object AppContainer {
      */
     var categoryRepository: CategoryRepository
         get() = categoryRepositoryInstance
-            ?: CategoryRepository(database.categoryDao()).also { categoryRepositoryInstance = it }
+            ?: CategoryRepository(
+                database.categoryDao(),
+                ApiClient.create(BuildConfig.MOCKAPI_CATEGORIES_URL),
+                userId = { authRepository.currentUser.value?.uid }
+            ).also { categoryRepositoryInstance = it }
         @VisibleForTesting
         set(value) {
             categoryRepositoryInstance = value

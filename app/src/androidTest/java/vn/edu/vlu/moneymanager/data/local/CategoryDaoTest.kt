@@ -9,6 +9,7 @@ import kotlinx.coroutines.runBlocking
 import org.junit.After
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
+import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -75,5 +76,17 @@ class CategoryDaoTest {
         dao.deleteById(1L)
 
         assertNull(dao.getById(1L))
+    }
+
+    @Test
+    fun replaceAll_keepsTransactionsOfRowsThatStay_andDropsOtherRows() = runBlocking {
+        val transactionDao = database.transactionDao()
+        val linked = transactionDao.observeAll().first().count { it.categoryId == 1L }
+        assertTrue(linked > 0)
+
+        dao.replaceAll(listOf(dao.getById(1L)!!.copy(name = "Renamed by server")))
+
+        assertEquals(listOf("Renamed by server"), dao.observeAll().first().map { it.name })
+        assertEquals(linked, transactionDao.observeAll().first().count { it.categoryId == 1L })
     }
 }

@@ -17,6 +17,7 @@ import com.google.android.material.tabs.TabLayout
 import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.databinding.DialogCategoryBinding
 import vn.edu.vlu.moneymanager.databinding.FragmentCategoryBinding
 import vn.edu.vlu.moneymanager.feature.category.viewmodel.CategoryItem
@@ -50,6 +51,7 @@ class CategoryFragment : Fragment() {
             override fun onTabReselected(tab: TabLayout.Tab) = Unit
         })
         binding.fabAddCategory.setOnClickListener { showCategoryDialog(null) }
+        binding.errorBanner.btnRetry.setOnClickListener { viewModel.refresh() }
 
         binding.emptyCategories.ivEmptyIcon.setImageResource(R.drawable.ic_label)
         binding.emptyCategories.tvEmptyTitle.setText(R.string.empty_categories_title)
@@ -72,7 +74,10 @@ class CategoryFragment : Fragment() {
         }
         adapter.submitList(state.items)
         binding.rvCategories.isVisible = state.items.isNotEmpty()
-        binding.emptyCategories.root.isVisible = state.items.isEmpty()
+        binding.emptyCategories.root.isVisible = state.items.isEmpty() && state.sync !is UiState.Loading
+        binding.progressCategories.isVisible = state.sync is UiState.Loading
+        binding.errorBanner.root.isVisible = state.sync is UiState.Error
+        (state.sync as? UiState.Error)?.let { binding.errorBanner.tvErrorMessage.setText(it.messageRes) }
     }
 
     /** Add ([editing] == null) or edit a category. The color is read from the android:tag of each chip. */

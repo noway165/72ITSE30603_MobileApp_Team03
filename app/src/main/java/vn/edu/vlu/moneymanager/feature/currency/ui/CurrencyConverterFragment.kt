@@ -11,6 +11,7 @@ import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.R
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.databinding.FragmentCurrencyConverterBinding
 import vn.edu.vlu.moneymanager.feature.currency.CurrencyAdapter
 import vn.edu.vlu.moneymanager.feature.currency.CurrencyViewModel
@@ -49,6 +50,7 @@ class CurrencyConverterFragment : Fragment() {
         }
         binding.btnSwap.setOnClickListener { viewModel.swap() }
         binding.btnRefreshRates.setOnClickListener { viewModel.refreshRates() }
+        binding.errorBanner.btnRetry.setOnClickListener { viewModel.refreshRates() }
 
         val ratesAdapter = CurrencyAdapter()
         binding.rvRates.adapter = ratesAdapter
@@ -82,8 +84,12 @@ class CurrencyConverterFragment : Fragment() {
         binding.tvLastUpdated.text = state.lastUpdatedMillis?.let {
             getString(R.string.converter_updated_at, DateFormatter.dateTime(it))
         } ?: getString(R.string.converter_never_updated)
+        // Loading: progress bar; Error: banner + Retry, the cached rates from Room stay visible; Success: neither
         binding.progressRates.isVisible = state.isRefreshing
         binding.btnRefreshRates.isEnabled = !state.isRefreshing
-        binding.tvOfflineNote.isVisible = state.refreshFailed
+        val error = state.sync as? UiState.Error
+        binding.errorBanner.root.isVisible = error != null
+        error?.let { binding.errorBanner.tvErrorMessage.setText(it.messageRes) }
+        binding.tvOfflineNote.isVisible = error != null && state.lastUpdatedMillis != null
     }
 }

@@ -7,21 +7,24 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeExchangeRateApi
 import vn.edu.vlu.moneymanager.FakeTransactionApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
+import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.collectInBackground
 import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType.EXPENSE
 import vn.edu.vlu.moneymanager.data.model.TransactionType.INCOME
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.emptyCategoryRepository
 import vn.edu.vlu.moneymanager.emptyTransactionRepository
 import vn.edu.vlu.moneymanager.feature.dashboard.viewmodel.DashboardViewModel
 import vn.edu.vlu.moneymanager.midMonthMillis
-import vn.edu.vlu.moneymanager.testTransaction
-import vn.edu.vlu.moneymanager.usdSettings
 import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 import vn.edu.vlu.moneymanager.saved
+import vn.edu.vlu.moneymanager.testTransaction
+import vn.edu.vlu.moneymanager.usdSettings
 import java.io.IOException
 
 class DashboardViewModelTest {
@@ -127,6 +130,27 @@ class DashboardViewModelTest {
         transactions.save(testTransaction(INCOME, 500.0, midMonthMillis(thisMonth)))
 
         assertEquals(500.0, viewModel.uiState.value.balance, DELTA)
+    }
+
+    @Test
+    fun ratesDownloaded_syncIsSuccess() = runTest {
+        val viewModel = DashboardViewModel(transactions, categories, sampleCurrencyRepository(FakeExchangeRateApi()), settings)
+        collectInBackground(viewModel.uiState)
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
+    }
+
+    @Test
+    fun offline_syncIsError_andRetryRecovers() = runTest {
+        val api = FakeExchangeRateApi().apply { failure = IOException("Airplane Mode") }
+        val viewModel = DashboardViewModel(transactions, categories, sampleCurrencyRepository(api), settings)
+        collectInBackground(viewModel.uiState)
+        assertEquals(UiState.Error(R.string.error_network_offline), viewModel.uiState.value.sync)
+
+        api.failure = null
+        viewModel.refresh()
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
     }
 
     private companion object {

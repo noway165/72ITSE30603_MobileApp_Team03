@@ -40,8 +40,9 @@ suspend fun TransactionRepository.saved(transaction: Transaction): Transaction =
 fun sampleBudgetRepository(api: FakeBudgetApi = FakeBudgetApi()): BudgetRepository =
     BudgetRepository(FakeBudgetDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
-/** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded). */
-fun sampleCurrencyRepository(): CurrencyRepository = CurrencyRepository(FakeExchangeRateDao())
+/** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded); runs inline. */
+fun sampleCurrencyRepository(api: FakeExchangeRateApi = FakeExchangeRateApi()): CurrencyRepository =
+    CurrencyRepository(FakeExchangeRateDao(), api, Dispatchers.Unconfined)
 
 /** Category repository over in-memory fakes holding the SampleData categories; runs inline, no real IO thread. */
 fun sampleCategoryRepository(api: FakeCategoryApi = FakeCategoryApi()): CategoryRepository =

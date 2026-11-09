@@ -12,6 +12,7 @@ import androidx.navigation.fragment.findNavController
 import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.MainActivity
 import vn.edu.vlu.moneymanager.R
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.databinding.FragmentDashboardBinding
 import vn.edu.vlu.moneymanager.feature.dashboard.viewmodel.DashboardUiState
 import vn.edu.vlu.moneymanager.feature.dashboard.viewmodel.DashboardViewModel
@@ -52,6 +53,7 @@ class DashboardFragment : Fragment() {
             findNavController().navigate(R.id.action_dashboard_to_currency)
         }
         binding.cardSyncBanner.setOnClickListener { openTab(R.id.profileFragment) }
+        binding.errorBanner.btnRetry.setOnClickListener { viewModel.refresh() }
 
         repeatOnViewStarted {
             launch {
@@ -80,7 +82,12 @@ class DashboardFragment : Fragment() {
         binding.tvMissingRates.isVisible = state.hasMissingRates
 
         binding.rvRecent.isVisible = state.recent.isNotEmpty()
-        binding.emptyRecent.root.isVisible = state.recent.isEmpty()
+        binding.emptyRecent.root.isVisible = state.recent.isEmpty() && state.sync !is UiState.Loading
+
+        // Loading / Error / Success of the refresh; the Room data above stays visible in every state
+        binding.progressDashboard.isVisible = state.sync is UiState.Loading
+        binding.errorBanner.root.isVisible = state.sync is UiState.Error
+        (state.sync as? UiState.Error)?.let { binding.errorBanner.tvErrorMessage.setText(it.messageRes) }
     }
 
     private fun openTab(@IdRes destinationId: Int) {

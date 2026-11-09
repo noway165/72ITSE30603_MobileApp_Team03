@@ -7,6 +7,7 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeTransactionApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.collectInBackground
 import vn.edu.vlu.moneymanager.data.model.Category
@@ -21,13 +22,15 @@ import vn.edu.vlu.moneymanager.testTransaction
 import vn.edu.vlu.moneymanager.usdSettings
 import vn.edu.vlu.moneymanager.sampleCurrencyRepository
 import vn.edu.vlu.moneymanager.saved
+import java.io.IOException
 
 class DashboardViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val transactions = emptyTransactionRepository()
+    private val transactionApi = FakeTransactionApi(initial = emptyList())
+    private val transactions = emptyTransactionRepository(transactionApi)
     private val categories = emptyCategoryRepository()
     private val settings = usdSettings()
     private val thisMonth = MonthKey.current()
@@ -91,8 +94,11 @@ class DashboardViewModelTest {
 
     @Test
     fun pendingSyncCount_countsOnlyUnsyncedTransactions() = runTest {
-        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 1), pendingSync = true))
-        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 2), pendingSync = true))
+        // Saved without a network: kept on the device as pending
+        transactionApi.failure = IOException("Airplane Mode")
+        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 1)))
+        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 2)))
+        transactionApi.failure = null
         transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 3)))
         val viewModel = createViewModel()
         collectInBackground(viewModel.uiState)

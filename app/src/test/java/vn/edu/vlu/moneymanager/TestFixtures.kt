@@ -24,14 +24,21 @@ fun <T> TestScope.collectInBackground(flow: Flow<T>) {
     backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect { } }
 }
 
-/** Transaction repository over an in-memory DAO holding the SampleData transactions. */
-fun sampleTransactionRepository(): TransactionRepository = TransactionRepository(FakeTransactionDao())
+/** Transaction repository over in-memory fakes holding the SampleData transactions; runs inline, no real IO thread. */
+fun sampleTransactionRepository(api: FakeTransactionApi = FakeTransactionApi()): TransactionRepository =
+    TransactionRepository(FakeTransactionDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
 /** No transactions at all: tests that check totals want a clean slate. */
-fun emptyTransactionRepository(): TransactionRepository = TransactionRepository(FakeTransactionDao(initial = emptyList()))
+fun emptyTransactionRepository(api: FakeTransactionApi = FakeTransactionApi(initial = emptyList())): TransactionRepository =
+    TransactionRepository(FakeTransactionDao(initial = emptyList()), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
-/** Budget repository over an in-memory DAO holding the SampleData budgets (current month). */
-fun sampleBudgetRepository(): BudgetRepository = BudgetRepository(FakeBudgetDao())
+/** For tests that only need a transaction to exist: save() on the fakes cannot fail unless the API is told to. */
+suspend fun TransactionRepository.saved(transaction: Transaction): Transaction =
+    (save(transaction) as UiState.Success).data
+
+/** Budget repository over in-memory fakes holding the SampleData budgets (current month). */
+fun sampleBudgetRepository(api: FakeBudgetApi = FakeBudgetApi()): BudgetRepository =
+    BudgetRepository(FakeBudgetDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
 /** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded). */
 fun sampleCurrencyRepository(): CurrencyRepository = CurrencyRepository(FakeExchangeRateDao())

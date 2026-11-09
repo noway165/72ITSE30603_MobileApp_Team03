@@ -164,7 +164,9 @@ class TransactionListViewModelTest {
         viewModel.delete(target.id)
         viewModel.undoDelete()
 
-        assertEquals(target, transactionRepository.get(target.id))
+        // Uploaded again as a new server row: new id, synced, same data
+        val restored = transactionRepository.transactions.first().single { it.note == target.note }
+        assertEquals(target.copy(id = restored.id, pendingSync = false), restored)
         assertEquals(sizeBefore, currentState().items.size)
     }
 

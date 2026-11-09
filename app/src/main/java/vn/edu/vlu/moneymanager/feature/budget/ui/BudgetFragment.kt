@@ -49,6 +49,7 @@ class BudgetFragment : Fragment() {
         binding.monthSelector.btnPrevMonth.setOnClickListener { viewModel.previousMonth() }
         binding.monthSelector.btnNextMonth.setOnClickListener { viewModel.nextMonth() }
         binding.fabAddBudget.setOnClickListener { showBudgetDialog(null) }
+        binding.errorBanner.btnRetry.setOnClickListener { viewModel.refresh() }
 
         binding.emptyBudgets.ivEmptyIcon.setImageResource(R.drawable.ic_pie_chart)
         binding.emptyBudgets.tvEmptyTitle.setText(R.string.empty_budgets_title)
@@ -68,6 +69,9 @@ class BudgetFragment : Fragment() {
     @SuppressLint("NotifyDataSetChanged") // the currency of every row changed
     private fun render(state: BudgetUiState, adapter: BudgetAdapter) {
         binding.monthSelector.tvMonthTitle.text = DateFormatter.monthTitle(state.month)
+        binding.progressBudgets.isVisible = state.isLoading
+        binding.errorBanner.root.isVisible = state.errorMessage != null
+        state.errorMessage?.let(binding.errorBanner.tvErrorMessage::setText)
 
         if (adapter.currency != state.currency) {
             adapter.currency = state.currency
@@ -165,7 +169,11 @@ class BudgetFragment : Fragment() {
 
             override fun onSwiped(viewHolder: RecyclerView.ViewHolder, direction: Int) {
                 val position = viewHolder.bindingAdapterPosition
-                if (position != RecyclerView.NO_POSITION) viewModel.delete(adapter.currentList[position].budget.id)
+                if (position != RecyclerView.NO_POSITION) {
+                    viewModel.delete(adapter.currentList[position].budget.id)
+                    // Put the card back for now: it leaves the list once the server confirms (offline it stays)
+                    adapter.notifyItemChanged(position)
+                }
             }
         }
         ItemTouchHelper(callback).attachToRecyclerView(binding.rvBudgets)

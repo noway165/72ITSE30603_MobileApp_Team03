@@ -86,6 +86,7 @@
     <string name="empty_filter_message">Thử từ khóa khác hoặc bỏ bộ lọc.</string>
     <string name="transaction_deleted">Đã xóa giao dịch</string>
     <string name="transaction_saved">Đã lưu giao dịch</string>
+    <string name="transaction_saved_offline">Đã lưu trên máy. Giao dịch sẽ được tải lên ở lần đồng bộ tới.</string>
     <string name="uncategorized">Chưa phân loại</string>
     <string name="confirm_delete_transaction">Xóa giao dịch này?</string>
 

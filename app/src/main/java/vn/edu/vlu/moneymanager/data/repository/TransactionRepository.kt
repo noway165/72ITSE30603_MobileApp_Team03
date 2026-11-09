@@ -97,6 +97,9 @@ class TransactionRepository(
         }
     }
 
+    /** Sign-out: removes every row, pending ones too. The lock lets a running upload finish first. */
+    suspend fun clearLocal() = syncLock.withLock { transactionDao.deleteAll() }
+
     /** POST for a row the server has never seen (id <= 0), PUT otherwise. Returns the synced row. */
     private suspend fun upload(transaction: Transaction, uid: String): TransactionEntity {
         val dto = transaction.toDto(uid)

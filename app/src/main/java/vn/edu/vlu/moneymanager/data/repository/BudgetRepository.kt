@@ -38,6 +38,9 @@ class BudgetRepository(
         budgetDao.replaceAll(rows)
     }
 
+    /** Sign-out: the next account must not see this account's budgets. */
+    suspend fun clearLocal() = budgetDao.replaceAll(emptyList())
+
     /** Creates the budget when its id is 0, otherwise updates the row with the same id. */
     suspend fun save(budget: Budget): UiState<Budget> = apiCall(ioDispatcher) {
         val uid = checkNotNull(userId()) { "not signed in" }

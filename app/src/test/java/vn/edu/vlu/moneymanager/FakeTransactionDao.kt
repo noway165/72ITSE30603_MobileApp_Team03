@@ -45,6 +45,10 @@ class FakeTransactionDao(
         rows.update { list -> list.filterNot { it.id in ids } + transactions }
     }
 
+    override suspend fun deleteAll() {
+        rows.value = emptyList()
+    }
+
     override suspend fun getPending(): List<TransactionEntity> = rows.value.filter { it.pendingSync }
 
     override suspend fun minId(): Long? = rows.value.minOfOrNull { it.id }

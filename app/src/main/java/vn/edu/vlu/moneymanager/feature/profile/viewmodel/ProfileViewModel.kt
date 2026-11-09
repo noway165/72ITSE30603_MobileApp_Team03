@@ -93,6 +93,11 @@ class ProfileViewModel(
 
     fun signOut() {
         authRepository.signOut()
-        viewModelScope.launch { _events.send(ProfileEvent.SignedOut) }
+        viewModelScope.launch {
+            // Room is shared by every account on this device: the next one must not see or upload these rows
+            transactionRepository.clearLocal()
+            budgetRepository.clearLocal()
+            _events.send(ProfileEvent.SignedOut)
+        }
     }
 }

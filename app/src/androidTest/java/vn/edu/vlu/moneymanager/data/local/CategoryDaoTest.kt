@@ -15,6 +15,7 @@ import org.junit.Test
 import org.junit.runner.RunWith
 import vn.edu.vlu.moneymanager.data.local.dao.CategoryDao
 import vn.edu.vlu.moneymanager.data.local.entity.CategoryEntity
+import vn.edu.vlu.moneymanager.data.local.entity.TransactionEntity
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.source.SampleData
 
@@ -81,6 +82,7 @@ class CategoryDaoTest {
     @Test
     fun replaceAll_keepsTransactionsOfRowsThatStay_andDropsOtherRows() = runBlocking {
         val transactionDao = database.transactionDao()
+        SampleData.transactions.forEach { transactionDao.insert(TransactionEntity.fromModel(it)) }
         val linked = transactionDao.observeAll().first().count { it.categoryId == 1L }
         assertTrue(linked > 0)
 

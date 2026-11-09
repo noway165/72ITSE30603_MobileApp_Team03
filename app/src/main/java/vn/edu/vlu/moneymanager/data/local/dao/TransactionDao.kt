@@ -39,6 +39,9 @@ interface TransactionDao {
     @Query("DELETE FROM transactions WHERE id = :id")
     suspend fun deleteById(id: Long)
 
+    @Query("DELETE FROM transactions")
+    suspend fun deleteAll()
+
     /** Changes made on this device that the server does not have yet. */
     @Query("SELECT * FROM transactions WHERE pending_sync = 1")
     suspend fun getPending(): List<TransactionEntity>

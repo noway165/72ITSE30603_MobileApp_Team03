@@ -226,5 +226,14 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRates"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_exchange_rate" />
+
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

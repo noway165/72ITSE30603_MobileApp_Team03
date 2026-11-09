@@ -12,6 +12,8 @@ import androidx.fragment.app.viewModels
 import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.databinding.FragmentCurrencyConverterBinding
+import vn.edu.vlu.moneymanager.feature.currency.CurrencyAdapter
+import vn.edu.vlu.moneymanager.feature.currency.CurrencyViewModel
 import vn.edu.vlu.moneymanager.feature.currency.viewmodel.CurrencyConverterUiState
 import vn.edu.vlu.moneymanager.feature.currency.viewmodel.CurrencyConverterViewModel
 import vn.edu.vlu.moneymanager.util.DateFormatter
@@ -24,6 +26,7 @@ class CurrencyConverterFragment : Fragment() {
     private val binding get() = _binding!!
 
     private val viewModel: CurrencyConverterViewModel by viewModels()
+    private val ratesViewModel: CurrencyViewModel by viewModels()
 
     private var shownCurrencies: List<String> = emptyList()
 
@@ -47,8 +50,12 @@ class CurrencyConverterFragment : Fragment() {
         binding.btnSwap.setOnClickListener { viewModel.swap() }
         binding.btnRefreshRates.setOnClickListener { viewModel.refreshRates() }
 
+        val ratesAdapter = CurrencyAdapter()
+        binding.rvRates.adapter = ratesAdapter
+
         repeatOnViewStarted {
             launch { viewModel.uiState.collect(::render) }
+            launch { ratesViewModel.rates.collect { ratesAdapter.submitList(it) } }
         }
     }
 

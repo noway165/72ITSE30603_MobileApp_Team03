@@ -21,6 +21,22 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content" />
 
+        <!-- Network states: progress while refreshing (Loading), banner with Retry on UiState.Error -->
+        <com.google.android.material.progressindicator.LinearProgressIndicator
+            android:id="@+id/progressReport"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_s"
+            android:indeterminate="true"
+            android:visibility="gone" />
+
+        <include
+            android:id="@+id/errorBanner"
+            layout="@layout/layout_error_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_m" />
+
         <!-- Totals of the month -->
         <LinearLayout
             android:layout_width="match_parent"

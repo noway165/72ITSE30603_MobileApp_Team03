@@ -1,7 +1,7 @@
 package vn.edu.vlu.moneymanager.feature.currency
 
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.test.advanceUntilIdle
 import kotlinx.coroutines.test.runTest
 import org.junit.Assert.assertEquals
@@ -11,11 +11,15 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeExchangeRateApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
+import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.collectInBackground
-import vn.edu.vlu.moneymanager.feature.currency.viewmodel.CurrencyConverterViewModel
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.data.source.SampleData
+import vn.edu.vlu.moneymanager.feature.currency.viewmodel.CurrencyConverterViewModel
 import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import java.io.IOException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CurrencyConverterViewModelTest {
@@ -23,7 +27,8 @@ class CurrencyConverterViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val repository = sampleCurrencyRepository()
+    private val api = FakeExchangeRateApi()
+    private val repository = sampleCurrencyRepository(api)
     private val codes = SampleData.exchangeRates.rates.keys.toList()
     private val a get() = codes[0]
     private val b get() = codes[1]
@@ -121,19 +126,46 @@ class CurrencyConverterViewModelTest {
     }
 
     @Test
-    fun refreshRates_showsSpinnerThenFinishesWithoutError() = runTest {
+    fun opening_downloadsRatesAndEndsInSuccess() = runTest {
         val viewModel = createViewModel()
         collectInBackground(viewModel.uiState)
-
-        viewModel.refreshRates()
-        assertTrue(viewModel.uiState.value.isRefreshing)
-
         advanceUntilIdle()
 
         val state = viewModel.uiState.value
+        assertEquals(1, api.calls)
+        assertTrue(state.sync is UiState.Success)
         assertFalse(state.isRefreshing)
-        assertFalse(state.refreshFailed)
         assertNotNull(state.lastUpdatedMillis)
+    }
+
+    @Test
+    fun offline_endsInErrorAndKeepsCachedRates() = runTest {
+        api.failure = IOException("airplane mode")
+        val viewModel = createViewModel()
+        collectInBackground(viewModel.uiState)
+        advanceUntilIdle()
+
+        val state = viewModel.uiState.value
+        assertEquals(UiState.Error(R.string.error_network_offline), state.sync)
+        assertNull(state.lastUpdatedMillis) // seeded rows were never downloaded
+        viewModel.onFromSelected(a)
+        viewModel.onToSelected(b)
+        assertNotNull(viewModel.uiState.value.rate) // conversions still work from Room
+    }
+
+    @Test
+    fun retryAfterError_endsInSuccess() = runTest {
+        api.failure = IOException("airplane mode")
+        val viewModel = createViewModel()
+        collectInBackground(viewModel.uiState)
+        advanceUntilIdle()
+
+        api.failure = null
+        viewModel.refreshRates()
+        advanceUntilIdle()
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
+        assertNotNull(viewModel.uiState.value.lastUpdatedMillis)
     }
 
     private companion object {

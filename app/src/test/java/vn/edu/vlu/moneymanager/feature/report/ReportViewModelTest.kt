@@ -5,19 +5,24 @@ import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeExchangeRateApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
+import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.collectInBackground
 import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType.EXPENSE
 import vn.edu.vlu.moneymanager.data.model.TransactionType.INCOME
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.emptyCategoryRepository
 import vn.edu.vlu.moneymanager.emptyTransactionRepository
 import vn.edu.vlu.moneymanager.feature.report.viewmodel.ReportViewModel
 import vn.edu.vlu.moneymanager.midMonthMillis
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import vn.edu.vlu.moneymanager.saved
 import vn.edu.vlu.moneymanager.testTransaction
 import vn.edu.vlu.moneymanager.usdSettings
-import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import java.io.IOException
 
 class ReportViewModelTest {
 
@@ -73,9 +78,9 @@ class ReportViewModelTest {
 
     @Test
     fun slices_groupExpensesByCategory_sortedDescending_withoutZeroOrIncome() = runTest {
-        val food = categories.save(Category(0, "Food", EXPENSE, "#FF0000"))
-        val rent = categories.save(Category(0, "Rent", EXPENSE, "#00FF00"))
-        val unused = categories.save(Category(0, "Unused", EXPENSE, "#0000FF"))
+        val food = categories.saved(Category(0, "Food", EXPENSE, "#FF0000"))
+        val rent = categories.saved(Category(0, "Rent", EXPENSE, "#00FF00"))
+        val unused = categories.saved(Category(0, "Unused", EXPENSE, "#0000FF"))
         val at = midMonthMillis(thisMonth)
         transactions.save(testTransaction(EXPENSE, 100.0, at, categoryId = food.id))
         transactions.save(testTransaction(EXPENSE, 50.0, at, categoryId = food.id))
@@ -117,6 +122,27 @@ class ReportViewModelTest {
         collectInBackground(viewModel.uiState)
 
         assertTrue(viewModel.uiState.value.hasMissingRates)
+    }
+
+    @Test
+    fun ratesDownloaded_syncIsSuccess() = runTest {
+        val viewModel = ReportViewModel(transactions, categories, sampleCurrencyRepository(FakeExchangeRateApi()), settings)
+        collectInBackground(viewModel.uiState)
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
+    }
+
+    @Test
+    fun offline_syncIsError_andRetryRecovers() = runTest {
+        val api = FakeExchangeRateApi().apply { failure = IOException("Airplane Mode") }
+        val viewModel = ReportViewModel(transactions, categories, sampleCurrencyRepository(api), settings)
+        collectInBackground(viewModel.uiState)
+        assertEquals(UiState.Error(R.string.error_network_offline), viewModel.uiState.value.sync)
+
+        api.failure = null
+        viewModel.refresh()
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
     }
 
     private companion object {

@@ -33,6 +33,8 @@ class TransactionDaoTest {
             .addCallback(SeedDatabaseCallback)
             .build()
         dao = database.transactionDao()
+        // Transactions are no longer seeded (they come from MockAPI): insert the sample rows the tests build on
+        runBlocking { SampleData.transactions.forEach { dao.insert(TransactionEntity.fromModel(it)) } }
     }
 
     @After
@@ -52,7 +54,7 @@ class TransactionDaoTest {
         )
 
     @Test
-    fun newDatabase_isSeededWithSampleTransactions_newestFirst() = runBlocking {
+    fun sampleTransactions_areReadNewestFirst() = runBlocking {
         val rows = dao.observeAll().first()
 
         assertEquals(SampleData.transactions.size, rows.size)
@@ -89,13 +91,27 @@ class TransactionDaoTest {
     }
 
     @Test
-    fun markAllSynced_clearsEveryPendingFlag() = runBlocking {
-        dao.insert(newTransaction())
-        assertTrue(dao.observeAll().first().any { it.pendingSync })
+    fun replaceSynced_mirrorsTheServerButKeepsPendingRows() = runBlocking {
+        val pendingIds = dao.getPending().map { it.id }.toSet()
+        assertTrue("sample data has pending rows", pendingIds.isNotEmpty())
+        val server = dao.getById(1L)!!.copy(note = "From server", pendingSync = false)
 
-        dao.markAllSynced()
+        dao.replaceSynced(listOf(server))
 
-        assertFalse(dao.observeAll().first().any { it.pendingSync })
+        val rows = dao.observeAll().first()
+        assertEquals(pendingIds + 1L, rows.map { it.id }.toSet())
+        assertEquals("From server", dao.getById(1L)!!.note)
+    }
+
+    @Test
+    fun replaceRow_swapsTheOfflineIdForTheServerId() = runBlocking {
+        val offline = newTransaction().copy(id = -1L)
+        dao.insert(offline)
+
+        dao.replaceRow(-1L, offline.copy(id = 500L, pendingSync = false))
+
+        assertNull(dao.getById(-1L))
+        assertFalse(dao.getById(500L)!!.pendingSync)
     }
 
     @Test

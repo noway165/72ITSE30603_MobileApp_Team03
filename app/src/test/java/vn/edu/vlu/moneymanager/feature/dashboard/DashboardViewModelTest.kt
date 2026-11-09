@@ -7,26 +7,33 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeExchangeRateApi
+import vn.edu.vlu.moneymanager.FakeTransactionApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
+import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.collectInBackground
 import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType.EXPENSE
 import vn.edu.vlu.moneymanager.data.model.TransactionType.INCOME
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.emptyCategoryRepository
 import vn.edu.vlu.moneymanager.emptyTransactionRepository
 import vn.edu.vlu.moneymanager.feature.dashboard.viewmodel.DashboardViewModel
 import vn.edu.vlu.moneymanager.midMonthMillis
+import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import vn.edu.vlu.moneymanager.saved
 import vn.edu.vlu.moneymanager.testTransaction
 import vn.edu.vlu.moneymanager.usdSettings
-import vn.edu.vlu.moneymanager.sampleCurrencyRepository
+import java.io.IOException
 
 class DashboardViewModelTest {
 
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val transactions = emptyTransactionRepository()
+    private val transactionApi = FakeTransactionApi(initial = emptyList())
+    private val transactions = emptyTransactionRepository(transactionApi)
     private val categories = emptyCategoryRepository()
     private val settings = usdSettings()
     private val thisMonth = MonthKey.current()
@@ -77,7 +84,7 @@ class DashboardViewModelTest {
 
     @Test
     fun recent_joinsCategory_andUncategorizedHasNull() = runTest {
-        val food = categories.save(Category(0, "Food", EXPENSE, "#FF0000"))
+        val food = categories.saved(Category(0, "Food", EXPENSE, "#FF0000"))
         transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 2), categoryId = food.id))
         transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 1)))
         val viewModel = createViewModel()
@@ -90,8 +97,11 @@ class DashboardViewModelTest {
 
     @Test
     fun pendingSyncCount_countsOnlyUnsyncedTransactions() = runTest {
-        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 1), pendingSync = true))
-        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 2), pendingSync = true))
+        // Saved without a network: kept on the device as pending
+        transactionApi.failure = IOException("Airplane Mode")
+        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 1)))
+        transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 2)))
+        transactionApi.failure = null
         transactions.save(testTransaction(EXPENSE, 10.0, midMonthMillis(thisMonth, 3)))
         val viewModel = createViewModel()
         collectInBackground(viewModel.uiState)
@@ -120,6 +130,27 @@ class DashboardViewModelTest {
         transactions.save(testTransaction(INCOME, 500.0, midMonthMillis(thisMonth)))
 
         assertEquals(500.0, viewModel.uiState.value.balance, DELTA)
+    }
+
+    @Test
+    fun ratesDownloaded_syncIsSuccess() = runTest {
+        val viewModel = DashboardViewModel(transactions, categories, sampleCurrencyRepository(FakeExchangeRateApi()), settings)
+        collectInBackground(viewModel.uiState)
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
+    }
+
+    @Test
+    fun offline_syncIsError_andRetryRecovers() = runTest {
+        val api = FakeExchangeRateApi().apply { failure = IOException("Airplane Mode") }
+        val viewModel = DashboardViewModel(transactions, categories, sampleCurrencyRepository(api), settings)
+        collectInBackground(viewModel.uiState)
+        assertEquals(UiState.Error(R.string.error_network_offline), viewModel.uiState.value.sync)
+
+        api.failure = null
+        viewModel.refresh()
+
+        assertTrue(viewModel.uiState.value.sync is UiState.Success)
     }
 
     private companion object {

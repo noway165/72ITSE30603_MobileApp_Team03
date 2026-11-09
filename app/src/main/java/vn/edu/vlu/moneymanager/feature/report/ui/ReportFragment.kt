@@ -22,6 +22,7 @@ import com.github.mikephil.charting.formatter.PercentFormatter
 import com.google.android.material.color.MaterialColors
 import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.R
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.databinding.FragmentReportBinding
 import vn.edu.vlu.moneymanager.feature.report.viewmodel.ReportUiState
 import vn.edu.vlu.moneymanager.feature.report.viewmodel.ReportViewModel
@@ -45,6 +46,7 @@ class ReportFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         binding.monthSelector.btnPrevMonth.setOnClickListener { viewModel.previousMonth() }
         binding.monthSelector.btnNextMonth.setOnClickListener { viewModel.nextMonth() }
+        binding.errorBanner.btnRetry.setOnClickListener { viewModel.refresh() }
         setUpCharts()
 
         repeatOnViewStarted {
@@ -62,6 +64,10 @@ class ReportFragment : Fragment() {
         binding.tvReportIncome.text = MoneyFormatter.format(state.income, state.currency)
         binding.tvReportExpense.text = MoneyFormatter.format(state.expense, state.currency)
         binding.tvReportMissingRates.isVisible = state.hasMissingRates
+        // Loading / Error / Success of the refresh; the charts keep showing the Room data in every state
+        binding.progressReport.isVisible = state.sync is UiState.Loading
+        binding.errorBanner.root.isVisible = state.sync is UiState.Error
+        (state.sync as? UiState.Error)?.let { binding.errorBanner.tvErrorMessage.setText(it.messageRes) }
         renderPie(state)
         renderBars(state)
     }

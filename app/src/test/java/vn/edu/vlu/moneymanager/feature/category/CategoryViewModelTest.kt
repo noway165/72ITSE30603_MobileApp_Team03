@@ -11,14 +11,17 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeCategoryApi
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.collectInBackground
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.sampleTransactionRepository
 import vn.edu.vlu.moneymanager.feature.category.viewmodel.CategoryUiState
 import vn.edu.vlu.moneymanager.feature.category.viewmodel.CategoryViewModel
 import vn.edu.vlu.moneymanager.sampleCategoryRepository
+import java.net.UnknownHostException
 
 @OptIn(ExperimentalCoroutinesApi::class)
 class CategoryViewModelTest {
@@ -26,7 +29,8 @@ class CategoryViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val categoryRepository = sampleCategoryRepository()
+    private val api = FakeCategoryApi()
+    private val categoryRepository = sampleCategoryRepository(api)
     private val transactionRepository = sampleTransactionRepository()
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
@@ -67,6 +71,38 @@ class CategoryViewModelTest {
             val expected = transactionRepository.transactions.first().count { it.categoryId == item.category.id }
             assertEquals(item.category.name, expected, item.usageCount)
         }
+    }
+
+    // ---- server states ----
+
+    @Test
+    fun afterRefresh_stateIsSuccess() = runTest {
+        assertEquals(UiState.Success(Unit), currentState().sync)
+    }
+
+    @Test
+    fun offline_showsErrorButKeepsTheList_thenRetryRecovers() = runTest {
+        api.failure = UnknownHostException()
+
+        val failed = currentState()
+        assertEquals(UiState.Error(R.string.error_network_offline), failed.sync)
+        assertTrue(failed.items.isNotEmpty())
+
+        api.failure = null
+        viewModel.refresh()
+        assertEquals(UiState.Success(Unit), currentState().sync)
+    }
+
+    @Test
+    fun saveCategory_offline_showsErrorAndSavesNothing() = runTest {
+        currentState()
+        val before = categoryRepository.categories.first()
+        api.failure = UnknownHostException()
+
+        assertNull(viewModel.saveCategory(null, "Pets", TransactionType.EXPENSE, "#22C55E"))
+
+        assertEquals(UiState.Error(R.string.error_network_offline), currentState().sync)
+        assertEquals(before, categoryRepository.categories.first())
     }
 
     // ---- add / edit ----

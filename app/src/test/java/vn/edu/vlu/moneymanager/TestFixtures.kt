@@ -1,13 +1,16 @@
 package vn.edu.vlu.moneymanager
 
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.test.TestScope
 import kotlinx.coroutines.test.UnconfinedTestDispatcher
+import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.Transaction
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
@@ -21,22 +24,35 @@ fun <T> TestScope.collectInBackground(flow: Flow<T>) {
     backgroundScope.launch(UnconfinedTestDispatcher(testScheduler)) { flow.collect { } }
 }
 
-/** Transaction repository over an in-memory DAO holding the SampleData transactions. */
-fun sampleTransactionRepository(): TransactionRepository = TransactionRepository(FakeTransactionDao())
+/** Transaction repository over in-memory fakes holding the SampleData transactions; runs inline, no real IO thread. */
+fun sampleTransactionRepository(api: FakeTransactionApi = FakeTransactionApi()): TransactionRepository =
+    TransactionRepository(FakeTransactionDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
 /** No transactions at all: tests that check totals want a clean slate. */
-fun emptyTransactionRepository(): TransactionRepository = TransactionRepository(FakeTransactionDao(initial = emptyList()))
+fun emptyTransactionRepository(api: FakeTransactionApi = FakeTransactionApi(initial = emptyList())): TransactionRepository =
+    TransactionRepository(FakeTransactionDao(initial = emptyList()), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
-/** Budget repository over an in-memory DAO holding the SampleData budgets (current month). */
-fun sampleBudgetRepository(): BudgetRepository = BudgetRepository(FakeBudgetDao())
+/** For tests that only need a transaction to exist: save() on the fakes cannot fail unless the API is told to. */
+suspend fun TransactionRepository.saved(transaction: Transaction): Transaction =
+    (save(transaction) as UiState.Success).data
 
-/** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded). */
-fun sampleCurrencyRepository(): CurrencyRepository = CurrencyRepository(FakeExchangeRateDao())
+/** Budget repository over in-memory fakes holding the SampleData budgets (current month). */
+fun sampleBudgetRepository(api: FakeBudgetApi = FakeBudgetApi()): BudgetRepository =
+    BudgetRepository(FakeBudgetDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
 
-/** Category repository over an in-memory DAO holding the SampleData categories. */
-fun sampleCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao())
+/** Currency repository over an in-memory DAO holding the SampleData rates (never downloaded); runs inline. */
+fun sampleCurrencyRepository(api: FakeExchangeRateApi = FakeExchangeRateApi()): CurrencyRepository =
+    CurrencyRepository(FakeExchangeRateDao(), api, Dispatchers.Unconfined)
 
-fun emptyCategoryRepository(): CategoryRepository = CategoryRepository(FakeCategoryDao(initial = emptyList()))
+/** Category repository over in-memory fakes holding the SampleData categories; runs inline, no real IO thread. */
+fun sampleCategoryRepository(api: FakeCategoryApi = FakeCategoryApi()): CategoryRepository =
+    CategoryRepository(FakeCategoryDao(), api, { TEST_USER_ID }, Dispatchers.Unconfined)
+
+/** For tests that only need a category to exist: save() on the fakes cannot fail. */
+suspend fun CategoryRepository.saved(category: Category): Category = (save(category) as UiState.Success).data
+
+fun emptyCategoryRepository(): CategoryRepository =
+    CategoryRepository(FakeCategoryDao(initial = emptyList()), FakeCategoryApi(), { TEST_USER_ID }, Dispatchers.Unconfined)
 
 /** Default currency USD: transactions in USD convert at rate 1.0, so tests do not depend on SampleData rates. */
 fun usdSettings(): SettingsRepository = SettingsRepository().also { it.setDefaultCurrency("USD") }

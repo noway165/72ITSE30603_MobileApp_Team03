@@ -168,27 +168,11 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/space_s"
             android:text="@string/action_register"
-            app:layout_constraintBottom_toTopOf="@id/tvAuthMode"
+            app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
             app:layout_constraintStart_toEndOf="@id/tvNoAccount"
             app:layout_constraintTop_toBottomOf="@id/progressSignIn" />
 
-        <!-- "Demo mode" note, visible only when Firebase is not configured yet -->
-        <TextView
-            android:id="@+id/tvAuthMode"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_l"
-            android:gravity="center"
-            android:text="@string/auth_demo_mode_note"
-            android:textAppearance="?attr/textAppearanceBodySmall"
-            android:textColor="?attr/colorOnSurfaceVariant"
-            android:visibility="gone"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="@id/guidelineEnd"
-            app:layout_constraintStart_toStartOf="@id/guidelineStart"
-            app:layout_constraintTop_toBottomOf="@id/btnGoRegister"
-            tools:visibility="visible" />
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 </ScrollView>

@@ -2,16 +2,19 @@ package vn.edu.vlu.moneymanager.feature.report.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
+import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.data.AppContainer
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.model.totalIn
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
 import vn.edu.vlu.moneymanager.data.repository.SettingsRepository
@@ -30,19 +33,24 @@ data class ReportUiState(
     val expense: Double = 0.0,
     val slices: List<CategorySlice> = emptyList(),
     val bars: List<MonthBar> = emptyList(),
-    val hasMissingRates: Boolean = false
+    val hasMissingRates: Boolean = false,
+    /** State of the last refresh from the server; the charts always come from the Room copy */
+    val sync: UiState<Unit> = UiState.Loading
 )
 
 class ReportViewModel(
     transactionRepository: TransactionRepository = AppContainer.transactionRepository,
     categoryRepository: CategoryRepository = AppContainer.categoryRepository,
-    currencyRepository: CurrencyRepository = AppContainer.currencyRepository,
+    private val currencyRepository: CurrencyRepository = AppContainer.currencyRepository,
     settingsRepository: SettingsRepository = AppContainer.settingsRepository
 ) : ViewModel() {
 
     private val month = MutableStateFlow(MonthKey.current())
 
-    val uiState: StateFlow<ReportUiState> = combine(
+    private val sync = MutableStateFlow<UiState<Unit>>(UiState.Loading)
+    private var refreshJob: Job? = null
+
+    private val content = combine(
         month,
         transactionRepository.transactions,
         categoryRepository.categories,
@@ -81,7 +89,23 @@ class ReportViewModel(
             bars = bars,
             hasMissingRates = income.hasMissingRates || expense.hasMissingRates
         )
-    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReportUiState())
+    }
+
+    val uiState: StateFlow<ReportUiState> = combine(content, sync) { state, syncState -> state.copy(sync = syncState) }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ReportUiState())
+
+    init {
+        refresh()
+    }
+
+    /** Loading -> Success / Error: downloads the live exchange rates used to convert the totals. */
+    fun refresh() {
+        if (refreshJob?.isActive == true) return
+        refreshJob = viewModelScope.launch {
+            sync.value = UiState.Loading
+            sync.value = currencyRepository.refresh()
+        }
+    }
 
     fun previousMonth() = month.update { it.plusMonths(-1) }
 

@@ -11,6 +11,7 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.google.android.material.datepicker.MaterialDatePicker
 import com.google.android.material.dialog.MaterialAlertDialogBuilder
+import com.google.android.material.snackbar.Snackbar
 import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.data.model.Category
@@ -98,6 +99,10 @@ class AddEditTransactionActivity : AppCompatActivity() {
         binding.edtDate.setText(DateFormatter.date(form.dateMillis))
         binding.tilAmount.error = form.amountError?.let(::getString)
         binding.tilCategory.error = form.categoryError?.let(::getString)
+
+        // Loading: one tap = one request; the button comes back when the server answers
+        binding.btnSave.isEnabled = !state.isSaving
+        binding.toolbar.menu.findItem(R.id.action_delete)?.isEnabled = !state.isSaving
     }
 
     private fun handleEvent(event: AddEditTransactionEvent) {
@@ -106,6 +111,8 @@ class AddEditTransactionActivity : AppCompatActivity() {
                 Toast.makeText(this, event.messageRes, Toast.LENGTH_SHORT).show()
                 finish()
             }
+            is AddEditTransactionEvent.ShowError ->
+                Snackbar.make(binding.root, event.messageRes, Snackbar.LENGTH_LONG).setAnchorView(binding.btnSave).show()
         }
     }
 

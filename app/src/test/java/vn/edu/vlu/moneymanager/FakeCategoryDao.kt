@@ -40,4 +40,13 @@ class FakeCategoryDao(
     override suspend fun deleteById(id: Long) {
         rows.update { list -> list.filterNot { it.id == id } }
     }
+
+    override suspend fun deleteExcept(ids: List<Long>) {
+        rows.update { list -> list.filter { it.id in ids } }
+    }
+
+    override suspend fun upsertAll(categories: List<CategoryEntity>) {
+        val ids = categories.map { it.id }
+        rows.update { list -> list.filterNot { it.id in ids } + categories }
+    }
 }

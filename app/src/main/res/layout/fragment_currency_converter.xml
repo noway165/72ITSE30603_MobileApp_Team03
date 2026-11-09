@@ -14,6 +14,14 @@
         android:orientation="vertical"
         android:padding="@dimen/screen_padding">
 
+        <!-- Shown when downloading the live rates fails (UiState.Error); Retry calls the API again -->
+        <include
+            android:id="@+id/errorBanner"
+            layout="@layout/layout_error_banner"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="@dimen/space_m" />
+
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/cardConverter"
             android:layout_width="match_parent"
@@ -225,6 +233,15 @@
 
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
+
+        <androidx.recyclerview.widget.RecyclerView
+            android:id="@+id/rvRates"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/space_l"
+            android:nestedScrollingEnabled="false"
+            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+            tools:listitem="@layout/item_exchange_rate" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

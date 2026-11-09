@@ -77,12 +77,12 @@ class RegisterViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val success = authRepository.register(email.trim(), password)
+            val error = authRepository.register(email.trim(), password)
             _uiState.update { it.copy(isLoading = false) }
-            if (success) {
-                _events.send(RegisterEvent.Registered)
-            } else {
-                _uiState.update { it.copy(emailError = R.string.error_email_taken) }
+            when (error) {
+                null -> _events.send(RegisterEvent.Registered)
+                R.string.error_email_taken -> _uiState.update { it.copy(emailError = error) }
+                else -> _events.send(RegisterEvent.ShowMessage(error))
             }
         }
     }

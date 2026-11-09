@@ -13,6 +13,7 @@ import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.data.AppContainer
 import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.TransactionType
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.TransactionRepository
 
@@ -20,7 +21,9 @@ data class CategoryItem(val category: Category, val usageCount: Int)
 
 data class CategoryUiState(
     val selectedType: TransactionType = TransactionType.EXPENSE,
-    val items: List<CategoryItem> = emptyList()
+    val items: List<CategoryItem> = emptyList(),
+    /** State of the last server call; the list itself always comes from the Room copy */
+    val sync: UiState<Unit> = UiState.Loading
 )
 
 class CategoryViewModel(
@@ -29,17 +32,20 @@ class CategoryViewModel(
 ) : ViewModel() {
 
     private val selectedType = MutableStateFlow(TransactionType.EXPENSE)
+    private val sync = MutableStateFlow<UiState<Unit>>(UiState.Loading)
 
     val uiState: StateFlow<CategoryUiState> = combine(
         selectedType,
         categoryRepository.categories,
-        transactionRepository.transactions
-    ) { type, categories, transactions ->
+        transactionRepository.transactions,
+        sync
+    ) { type, categories, transactions, syncState ->
         CategoryUiState(
             selectedType = type,
             items = categories.filter { it.type == type }.map { category ->
                 CategoryItem(category, transactions.count { it.categoryId == category.id })
-            }
+            },
+            sync = syncState
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), CategoryUiState())
 
@@ -51,9 +57,15 @@ class CategoryViewModel(
     private val allCategories: StateFlow<List<Category>> =
         categoryRepository.categories.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
+    init {
+        refresh()
+    }
+
+    fun refresh() = runSync { categoryRepository.refresh() }
+
     /**
      * Returns the error for the name field, or null when the category is being saved.
-     * Validation is synchronous so the dialog can stay open; the Room write runs in viewModelScope.
+     * Validation is synchronous so the dialog can stay open; a server error then shows in the banner.
      */
     @StringRes
     fun saveCategory(editingId: Long?, name: String, type: TransactionType, colorHex: String): Int? {
@@ -64,7 +76,7 @@ class CategoryViewModel(
             it.id != editingId && it.type == type && it.name.equals(trimmed, ignoreCase = true)
         }
         if (duplicate) return R.string.error_category_exists
-        viewModelScope.launch { categoryRepository.save(Category(editingId ?: 0L, trimmed, type, colorHex)) }
+        runSync { categoryRepository.save(Category(editingId ?: 0L, trimmed, type, colorHex)) }
         return null
     }
 
@@ -74,6 +86,14 @@ class CategoryViewModel(
      * inside the same SQLite delete.
      */
     fun deleteCategory(categoryId: Long) {
-        viewModelScope.launch { categoryRepository.delete(categoryId) }
+        runSync { categoryRepository.delete(categoryId) }
+    }
+
+    private fun runSync(call: suspend () -> UiState<*>) {
+        viewModelScope.launch {
+            sync.value = UiState.Loading
+            val result = call()
+            sync.value = if (result is UiState.Error) result else UiState.Success(Unit)
+        }
     }
 }

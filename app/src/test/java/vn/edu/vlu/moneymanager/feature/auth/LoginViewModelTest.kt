@@ -10,10 +10,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeAuthRepository
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
-import vn.edu.vlu.moneymanager.data.repository.AuthRepository
-import vn.edu.vlu.moneymanager.data.source.SampleData
 import vn.edu.vlu.moneymanager.feature.auth.viewmodel.LoginEvent
 import vn.edu.vlu.moneymanager.feature.auth.viewmodel.LoginViewModel
 
@@ -23,7 +22,7 @@ class LoginViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val authRepository = AuthRepository()
+    private val authRepository = FakeAuthRepository()
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
     private val viewModel by lazy { LoginViewModel(authRepository) }
@@ -32,7 +31,7 @@ class LoginViewModelTest {
 
     @Test
     fun signIn_invalidEmail_showsEmailErrorAndDoesNotCallRepository() = runTest {
-        viewModel.signIn("not-an-email", SampleData.DEMO_PASSWORD)
+        viewModel.signIn("not-an-email", FakeAuthRepository.DEMO_PASSWORD)
         advanceUntilIdle()
 
         assertEquals(R.string.error_email_invalid, viewModel.uiState.value.emailError)
@@ -43,7 +42,7 @@ class LoginViewModelTest {
 
     @Test
     fun signIn_emptyPassword_showsPasswordRequired() = runTest {
-        viewModel.signIn(SampleData.DEMO_EMAIL, "")
+        viewModel.signIn(FakeAuthRepository.DEMO_EMAIL, "")
         advanceUntilIdle()
 
         assertNull(viewModel.uiState.value.emailError)
@@ -63,7 +62,7 @@ class LoginViewModelTest {
 
     @Test
     fun signIn_demoAccount_showsLoadingThenSendsSignedIn() = runTest {
-        viewModel.signIn(SampleData.DEMO_EMAIL, SampleData.DEMO_PASSWORD)
+        viewModel.signIn(FakeAuthRepository.DEMO_EMAIL, FakeAuthRepository.DEMO_PASSWORD)
 
         // The repository is still "on the network" (simulated delay)
         assertTrue(viewModel.uiState.value.isLoading)
@@ -77,7 +76,7 @@ class LoginViewModelTest {
 
     @Test
     fun signIn_emailWithSpaces_isTrimmedBeforeSignIn() = runTest {
-        viewModel.signIn("  ${SampleData.DEMO_EMAIL}  ", SampleData.DEMO_PASSWORD)
+        viewModel.signIn("  ${FakeAuthRepository.DEMO_EMAIL}  ", FakeAuthRepository.DEMO_PASSWORD)
         advanceUntilIdle()
 
         assertEquals(LoginEvent.SignedIn, viewModel.events.first())
@@ -85,7 +84,7 @@ class LoginViewModelTest {
 
     @Test
     fun signIn_wrongPassword_sendsErrorMessage() = runTest {
-        viewModel.signIn(SampleData.DEMO_EMAIL, "wrong-password1")
+        viewModel.signIn(FakeAuthRepository.DEMO_EMAIL, "wrong-password1")
         advanceUntilIdle()
 
         assertEquals(LoginEvent.ShowMessage(R.string.error_sign_in_failed), viewModel.events.first())
@@ -97,7 +96,7 @@ class LoginViewModelTest {
     fun isSignedIn_followsRepository() = runTest {
         assertFalse(viewModel.isSignedIn)
 
-        authRepository.signIn(SampleData.DEMO_EMAIL, SampleData.DEMO_PASSWORD)
+        authRepository.signIn(FakeAuthRepository.DEMO_EMAIL, FakeAuthRepository.DEMO_PASSWORD)
 
         assertTrue(viewModel.isSignedIn)
     }
@@ -106,7 +105,7 @@ class LoginViewModelTest {
 
     @Test
     fun onEmailChanged_newText_clearsEmailError() = runTest {
-        viewModel.signIn("bad", SampleData.DEMO_PASSWORD)
+        viewModel.signIn("bad", FakeAuthRepository.DEMO_PASSWORD)
 
         viewModel.onEmailChanged("bad@")
 
@@ -117,7 +116,7 @@ class LoginViewModelTest {
     fun onEmailChanged_sameTextAgain_keepsError() = runTest {
         // After rotation the restored EditText sends the text it already had
         viewModel.onEmailChanged("bad")
-        viewModel.signIn("bad", SampleData.DEMO_PASSWORD)
+        viewModel.signIn("bad", FakeAuthRepository.DEMO_PASSWORD)
 
         viewModel.onEmailChanged("bad")
 
@@ -126,7 +125,7 @@ class LoginViewModelTest {
 
     @Test
     fun onPasswordChanged_newText_clearsPasswordError() = runTest {
-        viewModel.signIn(SampleData.DEMO_EMAIL, "")
+        viewModel.signIn(FakeAuthRepository.DEMO_EMAIL, "")
 
         viewModel.onPasswordChanged("d")
 

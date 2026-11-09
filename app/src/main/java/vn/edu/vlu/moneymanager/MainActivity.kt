@@ -4,6 +4,7 @@ import android.os.Bundle
 import androidx.activity.enableEdgeToEdge
 import androidx.annotation.IdRes
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
 import androidx.navigation.NavController
 import androidx.navigation.fragment.NavHostFragment
 import androidx.navigation.ui.AppBarConfiguration
@@ -11,6 +12,7 @@ import androidx.navigation.ui.navigateUp
 import androidx.navigation.ui.setupActionBarWithNavController
 import androidx.navigation.ui.setupWithNavController
 import vn.edu.vlu.moneymanager.databinding.ActivityMainBinding
+import vn.edu.vlu.moneymanager.feature.main.viewmodel.MainViewModel
 
 /** Shell of the app: toolbar + NavHostFragment + bottom navigation. All screens are Fragments with their own ViewModel. */
 class MainActivity : AppCompatActivity() {
@@ -42,6 +44,7 @@ class MainActivity : AppCompatActivity() {
         binding.bottomNav?.setupWithNavController(navController)
         binding.navRail?.setupWithNavController(navController)
         navController.addOnDestinationChangedListener { _, destination, _ -> highlightParentTab(destination.id) }
+        ViewModelProvider(this)[MainViewModel::class.java] // its init runs the startup sync, once per app open
     }
 
     /**

@@ -61,8 +61,6 @@ class LoginActivity : AppCompatActivity() {
         binding.tilPassword.error = state.passwordError?.let(::getString)
         binding.progressSignIn.isVisible = state.isLoading
         binding.btnSignIn.isEnabled = !state.isLoading
-        binding.tvAuthMode.isVisible = true
-        binding.tvAuthMode.text = getString(R.string.auth_demo_mode_with_account, state.demoEmail, state.demoPassword)
     }
 
     private fun handleEvent(event: LoginEvent) {

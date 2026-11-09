@@ -10,10 +10,9 @@ import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
+import vn.edu.vlu.moneymanager.FakeAuthRepository
 import vn.edu.vlu.moneymanager.MainDispatcherRule
 import vn.edu.vlu.moneymanager.R
-import vn.edu.vlu.moneymanager.data.repository.AuthRepository
-import vn.edu.vlu.moneymanager.data.source.SampleData
 import vn.edu.vlu.moneymanager.feature.auth.viewmodel.PasswordStrength
 import vn.edu.vlu.moneymanager.feature.auth.viewmodel.RegisterEvent
 import vn.edu.vlu.moneymanager.feature.auth.viewmodel.RegisterViewModel
@@ -24,7 +23,7 @@ class RegisterViewModelTest {
     @get:Rule
     val mainDispatcherRule = MainDispatcherRule()
 
-    private val authRepository = AuthRepository()
+    private val authRepository = FakeAuthRepository()
 
     // lazy: created inside the test body, after MainDispatcherRule has replaced Dispatchers.Main
     private val viewModel by lazy { RegisterViewModel(authRepository) }
@@ -114,7 +113,7 @@ class RegisterViewModelTest {
 
     @Test
     fun register_emailAlreadyUsed_showsEmailTakenOnTheEmailField() = runTest {
-        viewModel.register(SampleData.DEMO_EMAIL, "abcd1234", "abcd1234")
+        viewModel.register(FakeAuthRepository.DEMO_EMAIL, "abcd1234", "abcd1234")
         advanceUntilIdle()
 
         assertEquals(R.string.error_email_taken, viewModel.uiState.value.emailError)

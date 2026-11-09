@@ -62,7 +62,6 @@
     <string name="error_password_required">Enter your password</string>
     <string name="error_password_rule">Use at least 8 characters with letters and numbers</string>
     <string name="error_password_mismatch">Passwords do not match</string>
-    <string name="auth_demo_mode_note">Demo mode: Firebase is not configured yet, so accounts are stored only on this device.</string>
 
     <!-- Dashboard -->
     <string name="dashboard_total_balance">Total balance</string>
@@ -91,6 +90,7 @@
     <string name="empty_filter_message">Try another keyword or clear the filters.</string>
     <string name="transaction_deleted">Transaction deleted</string>
     <string name="transaction_saved">Transaction saved</string>
+    <string name="transaction_saved_offline">Saved on this device. It will be uploaded on the next sync.</string>
     <string name="uncategorized">Uncategorized</string>
     <string name="confirm_delete_transaction">Delete this transaction?</string>
 
@@ -179,8 +179,16 @@
     <!-- Added in Milestone 2 (MVVM) -->
     <string name="error_sign_in_failed">Incorrect email or password</string>
     <string name="error_email_taken">An account with this email already exists</string>
-    <string name="auth_demo_mode_with_account">Demo mode: Firebase is not configured yet, so accounts are stored only on this device.\nDemo account: %1$s / %2$s</string>
     <string name="sync_done">All changes are synced</string>
     <string name="category_deleted">Category deleted</string>
     <string name="percent_value" translatable="false">%d%%</string>
+
+    <!-- Network errors (Milestone 4) -->
+    <string name="action_retry">Retry</string>
+    <string name="error_network_offline">No internet connection.</string>
+    <string name="error_network_timeout">The server took too long to respond.</string>
+    <string name="error_http_bad_request">The request was not valid.</string>
+    <string name="error_http_not_found">The data was not found on the server.</string>
+    <string name="error_http_server">The server is having problems. Try again later.</string>
+    <string name="error_network_unknown">Something went wrong. Try again.</string>
 </resources>

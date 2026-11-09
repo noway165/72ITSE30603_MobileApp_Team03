@@ -7,6 +7,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ArrayAdapter
+import androidx.annotation.StringRes
 import androidx.appcompat.app.AppCompatDelegate
 import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
@@ -95,7 +96,10 @@ class ProfileFragment : Fragment() {
 
     private fun handleEvent(event: ProfileEvent) {
         when (event) {
-            ProfileEvent.SyncDone -> Snackbar.make(binding.root, R.string.sync_done, Snackbar.LENGTH_SHORT).show()
+            ProfileEvent.SyncDone -> snackbar(R.string.sync_done, Snackbar.LENGTH_SHORT).show()
+            is ProfileEvent.SyncFailed -> snackbar(event.messageRes, Snackbar.LENGTH_LONG)
+                .setAction(R.string.action_retry) { viewModel.syncNow() }
+                .show()
             ProfileEvent.SignedOut -> {
                 startActivity(
                     Intent(requireContext(), LoginActivity::class.java)
@@ -104,6 +108,10 @@ class ProfileFragment : Fragment() {
             }
         }
     }
+
+    /** Above the bottom navigation, which covers the bottom of this screen (landscape has a rail instead: null). */
+    private fun snackbar(@StringRes messageRes: Int, length: Int): Snackbar =
+        Snackbar.make(binding.root, messageRes, length).setAnchorView(requireActivity().findViewById<View>(R.id.bottomNav))
 
     private fun confirmSignOut() {
         MaterialAlertDialogBuilder(requireContext())

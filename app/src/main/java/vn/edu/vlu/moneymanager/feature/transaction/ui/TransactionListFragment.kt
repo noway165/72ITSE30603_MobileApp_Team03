@@ -55,6 +55,7 @@ class TransactionListFragment : Fragment() {
         binding.chipCategory.setOnCloseIconClickListener { viewModel.setCategory(null) }
         binding.chipDateRange.setOnClickListener { showDateRangePicker() }
         binding.chipDateRange.setOnCloseIconClickListener { viewModel.setDateRange(null, null) }
+        binding.errorBanner.btnRetry.setOnClickListener { viewModel.refresh() }
         binding.fabAddTransaction.setOnClickListener {
             startActivity(AddEditTransactionActivity.newIntent(requireContext()))
         }
@@ -74,6 +75,9 @@ class TransactionListFragment : Fragment() {
 
     private fun render(state: TransactionListUiState, adapter: TransactionAdapter) {
         adapter.submitList(state.items)
+        binding.progressTransactions.isVisible = state.isLoading
+        binding.errorBanner.root.isVisible = state.errorMessage != null
+        state.errorMessage?.let(binding.errorBanner.tvErrorMessage::setText)
         renderTypeChips(state.filter.type)
 
         binding.chipCategory.text = state.selectedCategory?.name ?: getString(R.string.filter_category)
@@ -173,6 +177,8 @@ class TransactionListFragment : Fragment() {
                 val position = viewHolder.bindingAdapterPosition
                 if (position != RecyclerView.NO_POSITION) {
                     viewModel.delete(adapter.currentList[position].transaction.id)
+                    // Put the row back for now: it leaves the list once the server confirms (offline it stays)
+                    adapter.notifyItemChanged(position)
                 }
             }
         }

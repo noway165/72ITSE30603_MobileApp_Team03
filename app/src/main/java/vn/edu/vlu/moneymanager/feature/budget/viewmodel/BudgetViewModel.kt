@@ -9,6 +9,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.drop
+import kotlinx.coroutines.flow.filter
 import kotlinx.coroutines.flow.receiveAsFlow
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.flow.update
@@ -21,6 +23,8 @@ import vn.edu.vlu.moneymanager.data.model.Category
 import vn.edu.vlu.moneymanager.data.model.MonthKey
 import vn.edu.vlu.moneymanager.data.model.TransactionType
 import vn.edu.vlu.moneymanager.data.model.totalIn
+import vn.edu.vlu.moneymanager.data.remote.NetworkMonitor
+import vn.edu.vlu.moneymanager.data.remote.UiState
 import vn.edu.vlu.moneymanager.data.repository.BudgetRepository
 import vn.edu.vlu.moneymanager.data.repository.CategoryRepository
 import vn.edu.vlu.moneymanager.data.repository.CurrencyRepository
@@ -32,7 +36,11 @@ data class BudgetUiState(
     val month: MonthKey = MonthKey.current(),
     val currency: String = "",
     val items: List<BudgetProgress> = emptyList(),
-    val expenseCategories: List<Category> = emptyList()
+    val expenseCategories: List<Category> = emptyList(),
+    /** A server call is running (download, save, delete, undo) */
+    val isLoading: Boolean = false,
+    /** Banner text: no network, or the last server call failed; null hides the banner */
+    @param:StringRes val errorMessage: Int? = null
 ) {
     val totalSpent: Double get() = items.sumOf { it.spent }
     val totalLimit: Double get() = items.sumOf { it.budget.limit }
@@ -56,10 +64,14 @@ class BudgetViewModel(
     transactionRepository: TransactionRepository = AppContainer.transactionRepository,
     categoryRepository: CategoryRepository = AppContainer.categoryRepository,
     currencyRepository: CurrencyRepository = AppContainer.currencyRepository,
-    settingsRepository: SettingsRepository = AppContainer.settingsRepository
+    settingsRepository: SettingsRepository = AppContainer.settingsRepository,
+    isOnline: StateFlow<Boolean> = NetworkMonitor.isOnline
 ) : ViewModel() {
 
     private val month = MutableStateFlow(MonthKey.current())
+
+    /** State of the last server call; the list itself always comes from the Room copy */
+    private val sync = MutableStateFlow<UiState<Unit>>(UiState.Loading)
 
     private val _events = Channel<BudgetEvent>(Channel.BUFFERED)
     val events: Flow<BudgetEvent> = _events.receiveAsFlow()
@@ -71,12 +83,12 @@ class BudgetViewModel(
         budgetRepository.budgets.stateIn(viewModelScope, SharingStarted.Eagerly, emptyList())
 
     val uiState: StateFlow<BudgetUiState> = combine(
-        month,
+        combine(month, sync, isOnline, ::Triple),
         allBudgets,
         transactionRepository.transactions,
         categoryRepository.categories,
         combine(currencyRepository.rates, settingsRepository.defaultCurrency, ::Pair)
-    ) { shownMonth, budgets, transactions, categories, (rates, currency) ->
+    ) { (shownMonth, syncState, online), budgets, transactions, categories, (rates, currency) ->
         val monthExpenses = transactions.filter { it.type == TransactionType.EXPENSE && shownMonth.contains(it.dateMillis) }
         val items = budgets.filter { it.month == shownMonth }.map { budget ->
             val spent = monthExpenses.filter { it.categoryId == budget.categoryId }
@@ -87,9 +99,19 @@ class BudgetViewModel(
             month = shownMonth,
             currency = currency,
             items = items,
-            expenseCategories = categories.filter { it.type == TransactionType.EXPENSE }
+            expenseCategories = categories.filter { it.type == TransactionType.EXPENSE },
+            isLoading = syncState is UiState.Loading,
+            errorMessage = if (!online) R.string.error_network_offline else (syncState as? UiState.Error)?.messageRes
         )
     }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), BudgetUiState())
+
+    init {
+        refresh()
+        // Airplane Mode turned off again: download what changed meanwhile, the banner goes away
+        viewModelScope.launch { isOnline.drop(1).filter { it }.collect { refresh() } }
+    }
+
+    fun refresh() = runSync { budgetRepository.refresh() }
 
     fun previousMonth() = month.update { it.plusMonths(-1) }
 
@@ -97,7 +119,7 @@ class BudgetViewModel(
 
     /**
      * Creates a budget ([editingId] == null) or updates one. Returns the errors to show in the dialog.
-     * Validation is synchronous so the dialog can stay open; the Room write runs in viewModelScope.
+     * Validation is synchronous so the dialog can stay open; a server error then shows in the banner.
      */
     fun saveBudget(editingId: Long?, categoryId: Long?, limitText: String): BudgetFormErrors {
         val limit = Validators.parseAmount(limitText)
@@ -116,21 +138,33 @@ class BudgetViewModel(
         )
         if (errors.hasErrors || categoryId == null || limit == null) return errors
 
-        viewModelScope.launch { budgetRepository.save(Budget(editingId ?: 0L, categoryId, selectedMonth, limit)) }
+        runSync { budgetRepository.save(Budget(editingId ?: 0L, categoryId, selectedMonth, limit)) }
         return errors
     }
 
+    /** Deleting needs the network: offline the budget stays and the banner explains why. */
     fun delete(budgetId: Long) {
-        lastDeleted = allBudgets.value.firstOrNull { it.id == budgetId } ?: return
-        viewModelScope.launch {
-            budgetRepository.delete(budgetId)
-            _events.send(BudgetEvent.ShowUndoDelete)
+        val target = allBudgets.value.firstOrNull { it.id == budgetId } ?: return
+        runSync {
+            budgetRepository.delete(budgetId).also { result ->
+                if (result !is UiState.Success) return@also
+                lastDeleted = target
+                _events.send(BudgetEvent.ShowUndoDelete)
+            }
         }
     }
 
     fun undoDelete() {
         val deleted = lastDeleted ?: return
         lastDeleted = null
-        viewModelScope.launch { budgetRepository.restore(deleted) }
+        runSync { budgetRepository.restore(deleted) }
+    }
+
+    private fun runSync(call: suspend () -> UiState<*>) {
+        viewModelScope.launch {
+            sync.value = UiState.Loading
+            val result = call()
+            sync.value = if (result is UiState.Error) result else UiState.Success(Unit)
+        }
     }
 }

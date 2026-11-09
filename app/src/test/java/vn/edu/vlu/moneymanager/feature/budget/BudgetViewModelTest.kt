@@ -204,7 +204,9 @@ class BudgetViewModelTest {
 
         viewModel.undoDelete()
 
-        assertTrue(budgetRepository.budgets.first().contains(target))
-        assertTrue(currentState().items.any { it.budget.id == target.id })
+        // The server gives the restored budget a new id; everything else comes back
+        val restored = budgetRepository.budgets.first().single { it.categoryId == target.categoryId && it.month == target.month }
+        assertEquals(target.copy(id = restored.id), restored)
+        assertTrue(currentState().items.any { it.budget.id == restored.id })
     }
 }

@@ -14,15 +14,12 @@ import kotlinx.coroutines.launch
 import vn.edu.vlu.moneymanager.R
 import vn.edu.vlu.moneymanager.data.AppContainer
 import vn.edu.vlu.moneymanager.data.repository.AuthRepository
-import vn.edu.vlu.moneymanager.data.source.SampleData
 import vn.edu.vlu.moneymanager.util.Validators
 
 data class LoginUiState(
     @param:StringRes val emailError: Int? = null,
     @param:StringRes val passwordError: Int? = null,
-    val isLoading: Boolean = false,
-    val demoEmail: String = SampleData.DEMO_EMAIL,
-    val demoPassword: String = SampleData.DEMO_PASSWORD
+    val isLoading: Boolean = false
 )
 
 sealed interface LoginEvent {
@@ -67,9 +64,9 @@ class LoginViewModel(
 
         viewModelScope.launch {
             _uiState.update { it.copy(isLoading = true) }
-            val success = authRepository.signIn(email.trim(), password)
+            val error = authRepository.signIn(email.trim(), password)
             _uiState.update { it.copy(isLoading = false) }
-            _events.send(if (success) LoginEvent.SignedIn else LoginEvent.ShowMessage(R.string.error_sign_in_failed))
+            _events.send(if (error == null) LoginEvent.SignedIn else LoginEvent.ShowMessage(error))
         }
     }
 }

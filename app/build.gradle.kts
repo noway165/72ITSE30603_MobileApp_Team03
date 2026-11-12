@@ -34,9 +34,13 @@ android {
 
     buildTypes {
         release {
+            // AGP 9 replaces isMinifyEnabled / proguardFiles with this block: it turns R8 on, which
+            // shrinks, optimizes and obfuscates the code. Keep rules live in src/main/keepRules/.
             optimization {
-                enable = false
+                enable = true
             }
+            // Removes drawables, layouts and strings that no code path reaches any more
+            isShrinkResources = true
         }
     }
     compileOptions {

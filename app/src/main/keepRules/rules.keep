@@ -1,12 +1,26 @@
-# Add project specific R8 rules here.
-# AGP will combine all keep rule files in src/main/keepRules to pass to R8
+# Project specific R8 rules.
+# AGP combines all keep rule files in src/main/keepRules to pass to R8.
+# For more details, see https://d.android.com/r/tools/r8/keep-rules
 #
-# For more details, see
-#   https://d.android.com/r/tools/r8/keep-rules
+# Why these rules exist: Gson matches JSON names to FIELD names by reflection. R8 renames fields
+# (amount -> a) and drops the ones no Kotlin code reads directly, so without these rules the release
+# build parses every DTO into nulls and zeros while the debug build keeps working.
 
-# If your project uses WebView with JS, uncomment the following
-# and specify the fully qualified class name to the JavaScript interface
-# class:
-#-keepclassmembers class fqcn.of.javascript.interface.for.webview {
-#   public *;
-#}
+# --- DTOs of the MockAPI resources (categories, transactions, budgets) ---
+-keep class vn.edu.vlu.moneymanager.data.remote.CategoryDto { *; }
+-keep class vn.edu.vlu.moneymanager.data.remote.TransactionDto { *; }
+-keep class vn.edu.vlu.moneymanager.data.remote.BudgetDto { *; }
+
+# --- DTO of ExchangeRate-API ---
+-keep class vn.edu.vlu.moneymanager.data.model.ExchangeRateResponse { *; }
+
+# Signature: generic types must survive, otherwise Gson cannot tell List<CategoryDto> from
+# List<Object>, nor Map<String, Double> from Map<Object, Object>.
+# *Annotation*: @SerializedName is read at runtime, for example "base_code" -> baseCode.
+-keepattributes Signature, *Annotation*
+
+# Any other class that labels its fields with @SerializedName keeps those field names as well,
+# so a DTO added later still parses even if someone forgets to list it above.
+-keepclassmembers class * {
+    @com.google.gson.annotations.SerializedName <fields>;
+}

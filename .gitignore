@@ -11,3 +11,5 @@
 
 app/google-services.json
 local.properties
+# Release signing key: never commit it
+*.jks

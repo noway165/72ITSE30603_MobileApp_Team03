@@ -23,7 +23,7 @@ android {
         minSdk = 24
         targetSdk = 37
         versionCode = 1
-        versionName = "0.2.0"
+        versionName = "1.0.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
 
@@ -32,8 +32,22 @@ android {
         buildConfigField("String", "EXCHANGE_RATE_API_KEY", localProperty("EXCHANGE_RATE_API_KEY"))
     }
 
+    // The keystore and its passwords stay out of git: path and passwords come from local.properties
+    signingConfigs {
+        create("release") {
+            storeFile = localProperties.getProperty("RELEASE_STORE_FILE")?.let { rootProject.file(it) }
+            storePassword = localProperties.getProperty("RELEASE_STORE_PASSWORD")
+            keyAlias = localProperties.getProperty("RELEASE_KEY_ALIAS")
+            keyPassword = localProperties.getProperty("RELEASE_KEY_PASSWORD")
+        }
+    }
+
     buildTypes {
         release {
+            // Members without the keystore still build: their release output is just unsigned
+            if (localProperties.getProperty("RELEASE_STORE_FILE") != null) {
+                signingConfig = signingConfigs.getByName("release")
+            }
             // AGP 9 replaces isMinifyEnabled / proguardFiles with this block: it turns R8 on, which
             // shrinks, optimizes and obfuscates the code. Keep rules live in src/main/keepRules/.
             optimization {
@@ -78,6 +92,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.auth)
     implementation(libs.kotlinx.coroutines.play.services)
+    implementation(libs.androidx.security.crypto)
     ksp(libs.androidx.room.compiler)
     implementation(libs.material)
     implementation(libs.mpandroidchart)

@@ -1,9 +1,11 @@
 package vn.edu.vlu.moneymanager.data
 
 import android.content.Context
+import android.content.SharedPreferences
 import androidx.annotation.VisibleForTesting
 import vn.edu.vlu.moneymanager.BuildConfig
 import vn.edu.vlu.moneymanager.data.local.AppDatabase
+import vn.edu.vlu.moneymanager.data.local.securePreferences
 import vn.edu.vlu.moneymanager.data.remote.ApiClient
 import vn.edu.vlu.moneymanager.data.remote.ExchangeRateApi
 import vn.edu.vlu.moneymanager.data.remote.NetworkMonitor
@@ -20,9 +22,13 @@ object AppContainer {
     lateinit var database: AppDatabase
         private set
 
+    // Stays null in JVM unit tests (no init): settings then live in memory only
+    private var settingsPrefs: SharedPreferences? = null
+
     fun init(context: Context) {
         database = AppDatabase.getInstance(context)
         NetworkMonitor.start(context)
+        settingsPrefs = securePreferences(context.applicationContext)
     }
 
     val authRepository: AuthRepository by lazy { FirebaseAuthRepository() }
@@ -86,5 +92,5 @@ object AppContainer {
             currencyRepositoryInstance = value
         }
 
-    val settingsRepository by lazy { SettingsRepository() }
+    val settingsRepository by lazy { SettingsRepository(settingsPrefs) }
 }

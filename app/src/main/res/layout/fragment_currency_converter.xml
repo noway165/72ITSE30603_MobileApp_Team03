@@ -1,18 +1,33 @@
 <?xml version="1.0" encoding="utf-8"?>
 <!-- Currency converter: amount, From / swap / To currencies, live result and rate,
-     plus a card that tells when the cached rates were updated (works offline with the last rates). -->
-<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+     plus a card that tells when the cached rates were updated (works offline with the last rates).
+     Milestone 5: the cards sit in an AppBarLayout and rvRates is the scrolling child with a bounded
+     height (match_parent). Before, rvRates was wrap_content inside a NestedScrollView, which measures
+     its child with unlimited height: the RecyclerView then inflated and bound a row for EVERY rate
+     (166 rows, 166 flag downloads) and never recycled one. -->
+<androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     tools:context=".feature.currency.ui.CurrencyConverterFragment">
 
+    <com.google.android.material.appbar.AppBarLayout
+        android:id="@+id/appBarConverter"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:background="@android:color/transparent"
+        app:elevation="0dp"
+        app:liftOnScroll="false">
+
+    <!-- scroll: the cards scroll away together with the list, as they did in the NestedScrollView -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        android:padding="@dimen/screen_padding">
+        android:paddingHorizontal="@dimen/screen_padding"
+        android:paddingTop="@dimen/screen_padding"
+        app:layout_scrollFlags="scroll">
 
         <!-- Shown when downloading the live rates fails (UiState.Error); Retry calls the API again -->
         <include
@@ -234,14 +249,22 @@
             </androidx.constraintlayout.widget.ConstraintLayout>
         </com.google.android.material.card.MaterialCardView>
 
-        <androidx.recyclerview.widget.RecyclerView
-            android:id="@+id/rvRates"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/space_l"
-            android:nestedScrollingEnabled="false"
-            app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
-            tools:listitem="@layout/item_exchange_rate" />
-
     </LinearLayout>
-</androidx.core.widget.NestedScrollView>
+    </com.google.android.material.appbar.AppBarLayout>
+
+    <!-- Placed below the AppBarLayout by the scrolling behavior. Its height is the space left on screen,
+         so only the visible rows get a ViewHolder and rows are reused while scrolling. -->
+    <androidx.recyclerview.widget.RecyclerView
+        android:id="@+id/rvRates"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:clipToPadding="false"
+        android:paddingHorizontal="@dimen/screen_padding"
+        android:paddingTop="@dimen/space_l"
+        android:paddingBottom="@dimen/screen_padding"
+        app:layoutManager="androidx.recyclerview.widget.LinearLayoutManager"
+        app:layout_behavior="@string/appbar_scrolling_view_behavior"
+        tools:itemCount="6"
+        tools:listitem="@layout/item_exchange_rate" />
+
+</androidx.coordinatorlayout.widget.CoordinatorLayout>

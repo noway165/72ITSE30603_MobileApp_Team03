@@ -25,6 +25,8 @@ class CurrencyRepository(
 
     val currencies: List<String> = SampleData.currencies
 
+    private val supportedCodes: Set<String> = currencies.toSet()
+
     /** Re-emits after every refresh. updated_at = 0 (the seeded rows) means the rates were never downloaded. */
     val rates: Flow<ExchangeRates> = exchangeRateDao.observeAll().map { entities ->
         if (entities.isEmpty()) {
@@ -38,7 +40,13 @@ class CurrencyRepository(
         }
     }
 
-    val ratesList: Flow<List<ExchangeRateEntity>> = exchangeRateDao.observeAll()
+    /**
+     * Rows of the rates list: only the currencies the app offers ([currencies]), sorted by code.
+     * A database filled before Milestone 5 still holds all 166 currencies of ExchangeRate-API.
+     */
+    val ratesList: Flow<List<ExchangeRateEntity>> = exchangeRateDao.observeAll().map { entities ->
+        entities.filter { it.currency_code in supportedCodes }.sortedBy { it.currency_code }
+    }
 
     /**
      * A failed call (wrong key, quota, no network) throws, apiCall turns it into UiState.Error,
@@ -46,7 +54,8 @@ class CurrencyRepository(
      */
     suspend fun refresh(): UiState<Unit> = apiCall(ioDispatcher) {
         val response = api.getLatestRates(BuildConfig.EXCHANGE_RATE_API_KEY, BASE_CURRENCY)
-        val ratesMap = response.conversionRates.orEmpty()
+        // The API answers with 166 currencies; the app converts between 6, so only those are stored
+        val ratesMap = response.conversionRates.orEmpty().filterKeys { it in supportedCodes }
         check(response.result == "success" && ratesMap.isNotEmpty()) { "empty rates" }
         val now = System.currentTimeMillis()
         exchangeRateDao.upsertAll(

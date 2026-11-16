@@ -44,6 +44,7 @@ class TransactionListFragment : Fragment() {
             startActivity(AddEditTransactionActivity.newIntent(requireContext(), item.transaction.id))
         }
         binding.rvTransactions.adapter = adapter
+        binding.rvTransactions.setHasFixedSize(true) // size comes from the layout, not from the rows
         attachSwipeToDelete(adapter)
 
         binding.edtSearch.setText(viewModel.uiState.value.filter.query)

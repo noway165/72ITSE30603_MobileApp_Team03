@@ -96,6 +96,9 @@ dependencies {
     ksp(libs.androidx.room.compiler)
     implementation(libs.material)
     implementation(libs.mpandroidchart)
+    // Debug only: watches destroyed Activities / Fragments / views / ViewModels and reports leaks.
+    // It installs itself through a ContentProvider, so no code is needed and release builds do not contain it.
+    debugImplementation(libs.leakcanary.android)
     testImplementation(libs.junit)
     testImplementation(libs.kotlinx.coroutines.test)
     androidTestImplementation(libs.androidx.espresso.core)

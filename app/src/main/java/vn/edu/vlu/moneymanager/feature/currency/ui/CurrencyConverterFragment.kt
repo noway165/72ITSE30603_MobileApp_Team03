@@ -54,6 +54,8 @@ class CurrencyConverterFragment : Fragment() {
 
         val ratesAdapter = CurrencyAdapter()
         binding.rvRates.adapter = ratesAdapter
+        // match_parent: a change of the rows never changes the size of the list itself
+        binding.rvRates.setHasFixedSize(true)
 
         repeatOnViewStarted {
             launch { viewModel.uiState.collect(::render) }

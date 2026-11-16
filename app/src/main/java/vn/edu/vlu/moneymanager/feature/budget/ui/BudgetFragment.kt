@@ -44,6 +44,7 @@ class BudgetFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val adapter = BudgetAdapter { item -> showBudgetDialog(item) }
         binding.rvBudgets.adapter = adapter
+        binding.rvBudgets.setHasFixedSize(true) // size comes from the layout, not from the rows
         attachSwipeToDelete(adapter)
 
         binding.monthSelector.btnPrevMonth.setOnClickListener { viewModel.previousMonth() }

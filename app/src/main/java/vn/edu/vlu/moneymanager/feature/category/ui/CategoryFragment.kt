@@ -41,6 +41,7 @@ class CategoryFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         val adapter = CategoryAdapter { item -> showCategoryDialog(item) }
         binding.rvCategories.adapter = adapter
+        binding.rvCategories.setHasFixedSize(true) // size comes from the layout, not from the rows
 
         binding.tabsCategoryType.addOnTabSelectedListener(object : TabLayout.OnTabSelectedListener {
             override fun onTabSelected(tab: TabLayout.Tab) {
